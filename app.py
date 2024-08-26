@@ -98,17 +98,18 @@ if prompt and event and year and paper_type:
         progress_bar.progress(int(100 * (idx+1) / len(result)),
                               text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
     with st.chat_message('assistant'):
-        for recommendation in response:
-            st.markdown(f'''
-            # {recommendation['title']}
+        with st.container(border=True):
+            for recommendation in response:
+                st.markdown(f'''
+                # {recommendation['title']}
 
-            Score {recommendation['score']}
-            
-            [Link]({recommendation['link']})
-            ## Abstract
-            {recommendation['abstract']}
-            ## Insights
-            {recommendation['insights']}
+                Score {recommendation['score']}
 
-            from `{db_name}`
-            ''')
+                [Link]({recommendation['link']})
+                ## Abstract
+                {recommendation['abstract']}
+                ## Insights
+                {recommendation['insights']}
+
+                from `{db_name}`
+                ''')
