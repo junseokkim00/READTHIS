@@ -24,15 +24,22 @@ def load_db(name: str, embeddings):
     else:
         raise Exception(f"db named {name} does not exist.")
 
-def set_db(name: str, embeddings):
-    if not os.path.isdir('./db'):
-        os.mkdir('./db')
-    vector_db = Chroma(
-        collection_name=name,
-        embedding_function=embeddings,
-        persist_directory=f"./db/{name}"
-    )
-    return vector_db
+def set_db(name: str, embeddings, save_local=True):
+    if save_local:
+        if not os.path.isdir('./db'):
+            os.mkdir('./db')
+        vector_db = Chroma(
+            collection_name=name,
+            embedding_function=embeddings,
+            persist_directory=f"./db/{name}"
+        )
+        return vector_db
+    else:
+        vector_db = Chroma(
+            collection_name=name,
+            embedding_function=embeddings,
+        )
+        return vector_db
 
 def add_documents(db, documents):
     uuids = [str(uuid4()) for _ in range(len(documents))]

@@ -5,7 +5,9 @@ from utils.LLM_utils import set_model, query_rewrite, judge_paper
 from langchain_community.document_loaders import ArxivLoader
 import os
 
-st.title("Read :red[This]📝")
+# st.set_page_config(page_title="Plotting Demo", page_icon="📈")
+
+st.title("What's :red[New]? 📝")
 st.subheader("find papers based on their `abstract`", divider=True)
 
 # sidebar setting

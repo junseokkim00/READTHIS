@@ -9,6 +9,8 @@ def set_model(name:str):
     if name == 'llama3-8b-8192':
         os.environ['GROQ_API_KEY'] = os.getenv('GROQ_API_KEY')
         llm = ChatGroq(model=name)
+    elif name == "New model":
+        pass
     else:
         raise Exception(f"{name} is currently not supported.")
     return llm

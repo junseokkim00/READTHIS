@@ -29,6 +29,31 @@ def fetch_paper_list(event: str, year: str, paper_type: str) -> List:
 
 
 def fetch_title_and_abstract(event: str, year:str, paper_type: str) -> List:
+    nlp= ['acl', 'emnlp', 'eacl', 'naacl']
+    ml = ['icml', 'iclr', 'neurips', 'aaai']
+    if event in nlp:
+        output = nlp_fetcher(event=event, year=year, paper_type=paper_type)
+    else:
+        pass
+    return output
+
+def ml_fetcher(event:str, year:str, paper_type: str) -> List:
+    event = event.capitalize()
+    url = f"https://openreview.net/group?id={event}.cc/2024/Conference#tab-accept-oral"
+    response = requests.get(url)
+    if response.status_code == 200:
+        html= response.text
+        soup = BeautifulSoup(html, 'html.parser')
+    else:
+        raise Exception(f"{url} does not exist")
+    papers = soup.find("div", 'tab-content')
+    pass
+    # todo need to modify a bit (use selenium)
+    # https://jimmy-ai.tistory.com/396
+    # use selenium
+
+
+def nlp_fetcher(event: str, year:str, paper_type: str) -> List:
     url = f"https://aclanthology.org/events/{event}-{year}/"
     response = requests.get(url)
     if response.status_code == 200:
@@ -61,6 +86,18 @@ def fetch_title_and_abstract(event: str, year:str, paper_type: str) -> List:
         )
         output.append(document)
     return output
+
+
+def load_paper(arxiv_id: str) -> str:
+    try:
+        paper_load = ArxivLoader(
+            query=arxiv_id,
+            load_max_docs=1
+        )
+        docs = paper_load.load()
+        return docs[0].metadata
+    except Exception as e:
+        return {}
 
 
 def title_to_abstract(title: str) -> str:
