@@ -27,8 +27,8 @@ if arxiv_number and query:
                         save_local=False)
             documents, cnt = get_cited_papers(arxiv_number)
             st.write(f"There is :red[{cnt}] papers highly related to the given paper.")
-            # rec_documents,rec_cnt = recommend_paper(paper_title=title)
-            # st.write(f"There is :red[{rec_cnt}] papers highly related to the given paper.")
+            rec_documents, rec_cnt = recommend_paper(paper_title=title)
+            st.write(f"There is :red[{rec_cnt}] papers highly related to the given paper.")
         with st.status(f"adding documents..."):
             db = add_documents(db=db,
                             documents=documents)
