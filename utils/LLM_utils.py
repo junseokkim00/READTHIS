@@ -26,6 +26,36 @@ def query_rewrite(model, query) -> str:
     output = chain.invoke({'query': query})
     return output.content
 
+
+def judge_cite_paper(model, title, abstract, query, keyword):
+    sys_msg="You are a prominent AI researcher and you need to help students by telling them whether they should put the given paper into their research paper or not. \
+            You will be given the title, and abstract of the paper as an input. Based on the student's intention and their keyword, tell them whether to add the given paper or not. \
+            Additionally, if they need to put the given paper into their research paper, give some reasons they should put the given paper to their research paper based on the given abstract. \
+            You should strictly follow the JSON format of the output, which contains \"put\", \"reason\" as a key. Each of the key describes the following: \
+                - \"put\": whether the student should put the given paper. (\'yes\' or \'no\')\n \
+                - \"reason\": the reason for the given paper.\n \
+                Now, begin!"
+    human_msg="""title of the paper: {title}
+    abstract of the paper: {abstract}
+    
+    student's keyword: {keyword}
+    student's intention for reading the paper: {query}
+    output:
+    """
+    prompt = ChatPromptTemplate([
+        ('system', sys_msg),
+        ('human', human_msg)
+    ])
+    chain = prompt | model | JsonOutputParser()
+    try:
+        output = chain.invoke({'title': title, 'abstract': abstract, 'query': query, 'keyword': keyword})
+    except Exception as e:
+        output = {
+            'put': "no",
+            'reason': e
+        }
+    return output
+
 def judge_paper(model, title, abstract, query):
     sys_msg= "You are a prominent AI researcher and you need to help students by telling them whether they should read the given paper or not. \
             You will be given the title, and abstract of the paper as an input. Based on the student's intention, tell them whether to read them or not. \
