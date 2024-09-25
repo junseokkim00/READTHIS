@@ -3,3 +3,5 @@ db/*
 __pycache__/*
 *.ipynb
 utils/__pycache__
+archive
+arxiv
