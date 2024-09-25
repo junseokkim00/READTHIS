@@ -9,3 +9,5 @@ langchain-huggingface
 langchain-groq
 fastapi
 uvicorn[standard]
+scikit-learn
+gsutil
