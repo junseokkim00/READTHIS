@@ -44,7 +44,24 @@ $ pip install -r requirements.txt
 
 
 
+## TODO
+- [ ] Connect not only reference papers, but also citation papers for the given query
+- [ ] Implement KNN for un-cited papers + citations
+
 ## References
 [semantic scholar api example](https://github.com/allenai/s2-folks/tree/main/examples/python) : github link for using semantic scholar api
 
 [multiple pages streamlit.io](https://docs.streamlit.io/get-started/tutorials/create-a-multipage-app): tutorial of streamlit making multi-pages
+
+
+[arxiv dataset](https://www.kaggle.com/datasets/Cornell-University/arxiv?resource=download)
+
+
+
+<details>
+<summary>Click to toggle contents of `code`</summary>
+
+```
+CODE!
+```
+</details>

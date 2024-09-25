@@ -5,3 +5,4 @@ __pycache__/*
 utils/__pycache__
 archive
 arxiv
+.DS_Store
