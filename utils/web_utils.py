@@ -88,7 +88,7 @@ def nlp_fetcher(event: str, year:str, paper_type: str) -> List:
     return output
 
 
-def load_paper(arxiv_id: str) -> str:
+def load_paper(arxiv_id: str):
     try:
         paper_load = ArxivLoader(
             query=arxiv_id,
@@ -98,6 +98,7 @@ def load_paper(arxiv_id: str) -> str:
         return docs[0].metadata
     except Exception as e:
         return {}
+
 
 
 def title_to_abstract(title: str) -> str:

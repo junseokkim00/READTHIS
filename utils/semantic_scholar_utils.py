@@ -61,12 +61,13 @@ def get_cited_papers(arxiv_id: str):
 
     # filtering data
     influential_papers = []
-    topic = set()
+    paperId = set()
     cnt = 0
     for inst in response_data['data']:
-        if inst['isInfluential'] and inst['citingPaper']['abstract'] is not None and inst['citingPaper']['title'] not in topic:
+        # if inst['isInfluential'] and inst['citingPaper']['abstract'] is not None and inst['citingPaper']['paperId'] not in paperId:
+        if inst['citingPaper']['abstract'] is not None and inst['citingPaper']['title'] not in paperId and inst['citingPaper']['url'] is not None and inst['citingPaper']['year'] is not None:
             cnt += 1
-            topic.add(inst['citingPaper']['title'])
+            paperId.add(inst['citingPaper']['paperId'])
             influential_papers.append(Document(
                 page_content=inst['citingPaper']['abstract'],
                 metadata={'title': inst['citingPaper']['title'],
