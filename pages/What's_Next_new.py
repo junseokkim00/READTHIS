@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from utils.db_utils import set_db, get_embeddings, add_documents
-from utils.semantic_scholar_utils import get_cited_papers, recommend_paper
+from utils.semantic_scholar_utils import get_cited_papers, recommend_paper, get_citations
 from utils.LLM_utils import set_model, query_rewrite, judge_paper
 from langchain_community.document_loaders import ArxivLoader
 from utils.arxiv_utils import load_paper_arxiv_api, retrieve_paper
@@ -13,10 +13,6 @@ st.subheader(
 # sidebar setting
 
 with st.sidebar:
-    area = st.selectbox(
-        "",
-        ["astro", "cs", "cond-mat", "econ", "eess", "hep", "math"]
-    )
     judge_llm = st.checkbox("Use llm to judge paper")
     rewrite_query = st.checkbox("rewrite query?")
 
@@ -42,7 +38,12 @@ if arxiv_number and query:
         documents, cnt = get_cited_papers(arxiv_number)
         st.write(
             f"There is :red[{cnt}] papers highly related to the given paper.")
-
+    
+    with st.status(f"retrieving citations...", expanded=True):
+        citations, cite_cnt = get_citations(arxiv_number)
+        st.write(
+            f"There is :red[{cite_cnt}] citation papers in the given paper."
+        )
     with st.status(f"retrieving un-cited paper...", expanded=True):
         uncited_papers = retrieve_paper(category_list=categories)
         st.write(
@@ -50,6 +51,9 @@ if arxiv_number and query:
     with st.status(f"adding documents..."):
         db = add_documents(db=db,
                            documents=documents)
+        print("ADDING CITATIONS...")
+        db = add_documents(db=db,
+                           documents=citations)
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
@@ -71,6 +75,7 @@ if arxiv_number and query:
     progress_bar = st.progress(
         0, text=f"Filtering documents from retrieved documents (0 / {len(result)})")
     for idx, doc in enumerate(result):
+        print(doc[0].metadata)
         abstract, title = doc[0].page_content, doc[0].metadata['title']
         if judge_llm:
             output = judge_paper(model=llm, title=title,
@@ -88,7 +93,8 @@ if arxiv_number and query:
                     'abstract': abstract,
                     'insights': output['insights'],
                     'link': link,
-                    'score': doc[1]
+                    'score': doc[1],
+                    'type': doc[0].metadata['type']
                 }
                 response.append(inst)
             else:
@@ -99,20 +105,44 @@ if arxiv_number and query:
                 'abstract': abstract,
                 'insights': None,
                 'link': doc[0].metadata['url'],
-                'score': doc[1]
+                'score': doc[1],
+                'type': doc[0].metadata['type']
             }
             response.append(inst)
         progress_bar.progress(int(100 * (idx+1) / len(result)),
                               text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
     with st.chat_message('assistant'):
         with st.container(border=True):
-            for recommendation in response:
-                st.markdown(f'''# {recommendation['title']}
+            for idx, recommendation in enumerate(response):
+                with st.expander(f"{idx}. {recommendation['title']}"):
+                    st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
+
+Type {recommendation['type']}
 
 [Link]({recommendation['link']})
 ## Abstract
 {recommendation['abstract']}
 ## Insights
 {recommendation['insights']}''')
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.header('pdf')
+
+#     with col2:
+#         st.header('Recommended papers')
+#         for idx, recommendation in enumerate(response):
+#             with st.expander(f"{idx}. {recommendation['title']}"):
+#                 st.markdown(f'''# {recommendation['title']}
+
+# Score {recommendation['score']}
+
+# Type {recommendation['type']}
+
+# [Link]({recommendation['link']})
+# ## Abstract
+# {recommendation['abstract']}
+# ## Insights
+# {recommendation['insights']}''')
