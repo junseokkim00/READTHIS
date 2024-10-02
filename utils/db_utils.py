@@ -3,6 +3,9 @@ import os
 from langchain_openai import OpenAIEmbeddings
 from uuid import uuid4
 from langchain_chroma import Chroma
+import chromadb.api
+
+
 
 
 def get_embeddings(name="openai"):
@@ -28,6 +31,7 @@ def set_db(name: str, embeddings, save_local=True):
     if save_local:
         if not os.path.isdir('./db'):
             os.mkdir('./db')
+        chromadb.api.client.SharedSystemClient.clear_system_cache()
         vector_db = Chroma(
             collection_name=name,
             embedding_function=embeddings,

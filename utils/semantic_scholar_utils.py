@@ -44,6 +44,38 @@ def search_query(query: str):
 
     # TODO search paper
 
+def get_citations(arxiv_id: str):
+    load_dotenv(find_dotenv())
+    references = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/references"
+    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url'}
+    api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+    headers = {'x-api-key': api_key}
+    response = requests.get(references, params=params, headers=headers)
+
+    if response.status_code == 200:
+        response_data = response.json()
+    else:
+        # request failed
+        return [], 0
+    influential_papers = []
+    paperId = set()
+    cnt = 0
+    for inst in response_data['data']:
+        # if inst['isInfluential'] and inst['citingPaper']['abstract'] is not None and inst['citingPaper']['paperId'] not in paperId:
+        if inst['citedPaper']['abstract'] is not None and inst['citedPaper']['title'] not in paperId and inst['citedPaper']['url'] is not None and inst['citedPaper']['year'] is not None:
+            cnt += 1
+            paperId.add(inst['citedPaper']['paperId'])
+            influential_papers.append(Document(
+                page_content=inst['citedPaper']['abstract'],
+                metadata={'title': inst['citedPaper']['title'],
+                          'year': inst['citedPaper']['year'],
+                          'url': inst['citedPaper']['url'],
+                          'type': 'citation'},
+                          
+                id=cnt
+            ))
+            # TODO should Document id be unique?
+    return influential_papers, cnt
 
 def get_cited_papers(arxiv_id: str):
     load_dotenv(find_dotenv())
@@ -56,8 +88,9 @@ def get_cited_papers(arxiv_id: str):
     if response.status_code == 200:
         response_data = response.json()
     else:
-        raise Exception(
-            f"Request failed with status code {response.status_code}: {response.text}")
+        # raise Exception(
+        #     f"Request failed with status code {response.status_code}: {response.text}")
+        return [], 0
 
     # filtering data
     influential_papers = []
@@ -72,7 +105,8 @@ def get_cited_papers(arxiv_id: str):
                 page_content=inst['citingPaper']['abstract'],
                 metadata={'title': inst['citingPaper']['title'],
                           'year': inst['citingPaper']['year'],
-                          'url': inst['citingPaper']['url']},
+                          'url': inst['citingPaper']['url'],
+                          'type': 'cited paper'},
                 id=cnt
             ))
             # TODO should Document id be unique?
