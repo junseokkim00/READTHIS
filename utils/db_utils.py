@@ -8,11 +8,11 @@ import chromadb.api
 
 
 
-def get_embeddings(name="openai"):
+def get_embeddings(name="openai", api_key="Your-Api-Key"):
     load_dotenv(find_dotenv())
     if name == "openai":
-        os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
-        embeddings = OpenAIEmbeddings()
+        # os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
+        embeddings = OpenAIEmbeddings(api_key=api_key)
     else:
         raise Exception(f'{name} is not currently supported as embeddings')
     return embeddings
