@@ -1,10 +1,13 @@
 import streamlit as st
 import os
+import shutil
 from utils.db_utils import set_db, get_embeddings, add_documents
 from utils.semantic_scholar_utils import get_cited_papers, recommend_paper, get_citations
 from utils.LLM_utils import set_model, query_rewrite, judge_paper
 from langchain_community.document_loaders import ArxivLoader
 from utils.arxiv_utils import load_paper_arxiv_api, retrieve_paper
+from utils.web_utils import duckduckgoSearch
+import time
 from utils.category_list import category_map
 st.title("What's :red[Next]? 📄")
 st.subheader(
@@ -31,6 +34,7 @@ if arxiv_number and query:
         st.write(f"Title: `{title}`")
         st.write(f"Categories: `{categories}`")
     with st.status(f"retrieving cited paper...", expanded=True):
+        time.sleep(1)
         embeddings = get_embeddings()
         db = set_db(name=arxiv_number,
                     embeddings=embeddings,
@@ -40,20 +44,35 @@ if arxiv_number and query:
             f"There is :red[{cnt}] papers highly related to the given paper.")
     
     with st.status(f"retrieving citations...", expanded=True):
+        time.sleep(2.05)
         citations, cite_cnt = get_citations(arxiv_number)
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
-    with st.status(f"retrieving un-cited paper...", expanded=True):
-        uncited_papers = retrieve_paper(category_list=categories)
+    # with st.status(f"retrieving un-cited paper...", expanded=True):
+    #     uncited_papers = retrieve_paper(category_list=categories)
+    #     st.write(
+    #         f"There is :red[{len(uncited_papers)}] papers that has the same category with the given paper.")
+    with st.status(f"retrieving from the internet...", expanded=True):
+        time.sleep(2.05)
+        searchOutput = duckduckgoSearch(query=query)
         st.write(
-            f"There is :red[{len(uncited_papers)}] papers that has the same category with the given paper.")
+            f"There is :red[{len(searchOutput)}] papers searched from the internet."
+        )
     with st.status(f"adding documents..."):
-        db = add_documents(db=db,
-                           documents=documents)
+        if len(documents) > 0:
+            db = add_documents(db=db,
+                            documents=documents)
         print("ADDING CITATIONS...")
-        db = add_documents(db=db,
-                           documents=citations)
+        if len(citations) > 0:
+            db = add_documents(db=db,
+                            documents=citations)
+        print("ADDING INTERNET PAPERS...")
+        if len(searchOutput) > 0:
+            db = add_documents(
+                db=db,
+                documents=searchOutput
+            )
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
@@ -67,7 +86,10 @@ if arxiv_number and query:
         rewrite_query = query
     # RETRIEVE
     with st.status(f"Retrieving...", expanded=True):
-        result = db.similarity_search_with_score(rewrite_query, k=10)
+        try:
+            result = db.similarity_search_with_score(rewrite_query, k=10)
+        except:
+            st.error("DB does not have documents.")
         for res in result:
             print(res[0].metadata['title'])
     # JUDGE PAPER
@@ -94,7 +116,7 @@ if arxiv_number and query:
                     'insights': output['insights'],
                     'link': link,
                     'score': doc[1],
-                    'type': doc[0].metadata['type']
+                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
                 }
                 response.append(inst)
             else:
@@ -106,7 +128,7 @@ if arxiv_number and query:
                 'insights': None,
                 'link': doc[0].metadata['url'],
                 'score': doc[1],
-                'type': doc[0].metadata['type']
+                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
             }
             response.append(inst)
         progress_bar.progress(int(100 * (idx+1) / len(result)),
@@ -114,7 +136,7 @@ if arxiv_number and query:
     with st.chat_message('assistant'):
         with st.container(border=True):
             for idx, recommendation in enumerate(response):
-                with st.expander(f"{idx}. {recommendation['title']}"):
+                with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']}"):
                     st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
@@ -126,6 +148,9 @@ Type {recommendation['type']}
 {recommendation['abstract']}
 ## Insights
 {recommendation['insights']}''')
+    copy_code = [f"{idx+1}. {resp['title']}" for idx, resp in enumerate(response)]
+    copy_code = '\n'.join(copy_code)
+    st.code(copy_code, language='markdown')
 
 #     col1, col2 = st.columns(2)
 #     with col1:

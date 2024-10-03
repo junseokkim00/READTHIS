@@ -5,6 +5,7 @@ from utils.zotero_utils import Zotero
 from utils.arxiv_utils import load_paper_arxiv_title
 from utils.semantic_scholar_utils import get_cited_papers, get_citations
 from utils.db_utils import set_db, get_embeddings, add_documents
+from utils.web_utils import duckduckgoSearch
 from collections import defaultdict
 import time
 import shutil
@@ -39,6 +40,7 @@ with st.sidebar:
         zotero_api_key = "L6Q6bXDgqXRZxjNmk5gCv7uX"
 
         st.markdown("[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
+        st.markdown(f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
         save_configuration = st.button("Save Zotero Configuration")
     if save_configuration or ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
         if 'library_id' not in st.session_state:
@@ -136,6 +138,16 @@ if check_config():
                         cited_cnt-=1
                 st.write(f":red[{cited_cnt}] paper is added to the db.")
             st.write(f"total number of cited paper: {total_cnt}")
+        with st.status(f"retrieving from the internet...", expanded=True):
+            total_cnt=0
+            searchOutput = duckduckgoSearch(query=prompt)
+            for doc in searchOutput:
+                if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
+                    title_set.add(doc.metadata['title'])
+                    total_paper_db.append(doc)
+                    total_cnt+=1
+            st.write(f"You got {total_cnt} papers via browsing the internet.")
+
         st.write(f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
         with st.status(f"Generating DB...", expanded=True):
             embeddings = get_embeddings()
@@ -159,18 +171,19 @@ if check_config():
         for idx, doc in enumerate(result):
             print(doc[0].metadata)
             abstract, title = doc[0].page_content, doc[0].metadata['title']
-            result = load_paper_arxiv_title(paper_name=title)
-            arxivId = result.entry_id.split('/')[-1]
+            result_paper = load_paper_arxiv_title(paper_name=title)
+            arxivId = result_paper.entry_id.split('/')[-1]
             if 'v' in arxivId:
                 arxivId = arxivId.split('v')[0]
             inst = {
                 'title': title,
                 'abstract': abstract,
+                'arxiv_info': result_paper,
                 'arxiv_id': arxivId,
                 'insights': None,
-                'link': result.entry_id,
+                'link': result_paper.entry_id,
                 'score': doc[1],
-                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]"
+                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
             }
             response.append(inst)
             progress_bar.progress(int(100 * (idx+1) / len(result)),
@@ -196,6 +209,43 @@ arxiv id: {recommendation['arxiv_id']}
 
 ## Related papers
 {paper_relationship[recommendation['title']]}''')
+                        # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
+                        #TODO comment for a moment...
+                        # template=zot.zot.item_template('preprint')
+                        # template['title'] = recommendation['title']
+                        # template['abstractNote'] = recommendation['abstract']
+                        # authors=[]
+                        # for author in recommendation['arxiv_info'].authors:
+                        #     name = author.name.split()
+                        #     inst = {
+                        #         'creatorType': 'author',
+                        #         'firstName': name[0],
+                        #         'lastName': name[1]
+                        #     }
+                        #     authors.append(inst)
+                        # template['creators'] = authors
+                        # template['repository'] = 'arXiv'
+                        # template['archiveID'] = f'arXiv:{recommendation["arxiv_id"]}'
+                        # template['date'] = recommendation['arxiv_info'].published.strftime("%Y-%m-%d")
+                        # template['url'] = recommendation['link']
+                        # template['libraryCatalog'] = 'arXiv.org'
+                        # template['extra'] = f"{template['archiveID']} [{recommendation['arxiv_info'].primary_category.split('.')[0]}]"
+                        # template['collections'] = [key]
+                            
+                        # if create:
+                        #     print('create!')
+                        #     print(template)
+#                             """title
+# creators
+# abstractNote
+# repository: 'arXiv'
+# archiveID: 'arXiv:{number}'
+# date
+# url
+# # accessDate: time
+# libraryCatalog: 'arXiv.org'
+# extra: archiveID [category]
+# collections: key"""
 
 else:
     st.error('Please setup your **zotero configuration**(left sidebar) first if you want to use this service!', icon='🚨')
