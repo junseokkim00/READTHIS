@@ -39,8 +39,10 @@ with st.sidebar:
         library_type = 'user'
         zotero_api_key = "L6Q6bXDgqXRZxjNmk5gCv7uX"
 
-        st.markdown("[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
-        st.markdown(f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
+        st.markdown(
+            "[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
+        st.markdown(
+            f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
         save_configuration = st.button("Save Zotero Configuration")
     if save_configuration or ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
         if 'library_id' not in st.session_state:
@@ -75,7 +77,7 @@ if check_config():
     if collection_select and prompt:
         with st.chat_message('user'):
             st.write(prompt)
-        db_name = collection_select.replace(" ","_")
+        db_name = collection_select.replace(" ", "_")
         paper_relationship = defaultdict(list)
         if os.path.isdir(f'./db/{db_name}'):
             shutil.rmtree(f'./db/{db_name}')
@@ -90,9 +92,9 @@ if check_config():
                     print("not updated.")
 
             with open(f'./collections/{key}', 'w') as f:
-                json.dump(paper_json,f)
+                json.dump(paper_json, f)
             arxivIds = []
-            titles=[]
+            titles = []
             for title, DOI in paper:
                 metadata = load_paper_arxiv_title(paper_name=title)
                 arxivId = metadata.entry_id.split('/')[-1]
@@ -112,7 +114,8 @@ if check_config():
                 time.sleep(2.05)
                 citations, cite_cnt = get_citations(arxiv_id=arxivId)
                 for citation in citations:
-                    paper_relationship[citation.metadata['title']].append(title)
+                    paper_relationship[citation.metadata['title']].append(
+                        title)
                     if citation.metadata['title'] not in title_set and citation.metadata['title'] not in titles:
                         title_set.add(citation.metadata['title'])
                         total_paper_db.append(citation)
@@ -123,32 +126,34 @@ if check_config():
             st.write(f"total number of citation paper: {total_cnt}")
 
         with st.status(f"retrieving cited paper...", expanded=True):
-            total_cnt=0
+            total_cnt = 0
             for title, arxivId in arxivIds:
                 st.write(f"fetching cited papers of `{title}`...")
                 time.sleep(2.05)
                 cited_papers, cited_cnt = get_cited_papers(arxiv_id=arxivId)
                 for cited_paper in cited_papers:
-                    paper_relationship[cited_paper.metadata['title']].append(title)
+                    paper_relationship[cited_paper.metadata['title']].append(
+                        title)
                     if cited_paper.metadata['title'] not in title_set and cited_paper.metadata['title'] not in titles:
                         title_set.add(cited_paper.metadata['title'])
                         total_paper_db.append(cited_paper)
-                        total_cnt +=1
+                        total_cnt += 1
                     else:
-                        cited_cnt-=1
+                        cited_cnt -= 1
                 st.write(f":red[{cited_cnt}] paper is added to the db.")
             st.write(f"total number of cited paper: {total_cnt}")
         with st.status(f"retrieving from the internet...", expanded=True):
-            total_cnt=0
+            total_cnt = 0
             searchOutput = duckduckgoSearch(query=prompt)
             for doc in searchOutput:
                 if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
                     title_set.add(doc.metadata['title'])
                     total_paper_db.append(doc)
-                    total_cnt+=1
+                    total_cnt += 1
             st.write(f"You got {total_cnt} papers via browsing the internet.")
 
-        st.write(f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
+        st.write(
+            f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
         with st.status(f"Generating DB...", expanded=True):
             embeddings = get_embeddings()
             db = set_db(
@@ -187,7 +192,7 @@ if check_config():
             }
             response.append(inst)
             progress_bar.progress(int(100 * (idx+1) / len(result)),
-                                text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
+                                  text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
         with st.chat_message('assistant'):
             with st.container(border=True):
                 for idx, recommendation in enumerate(response):
@@ -210,7 +215,7 @@ arxiv id: {recommendation['arxiv_id']}
 ## Related papers
 {paper_relationship[recommendation['title']]}''')
                         # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
-                        #TODO comment for a moment...
+                        # TODO comment for a moment...
                         # template=zot.zot.item_template('preprint')
                         # template['title'] = recommendation['title']
                         # template['abstractNote'] = recommendation['abstract']
@@ -231,7 +236,7 @@ arxiv id: {recommendation['arxiv_id']}
                         # template['libraryCatalog'] = 'arXiv.org'
                         # template['extra'] = f"{template['archiveID']} [{recommendation['arxiv_info'].primary_category.split('.')[0]}]"
                         # template['collections'] = [key]
-                            
+
                         # if create:
                         #     print('create!')
                         #     print(template)
