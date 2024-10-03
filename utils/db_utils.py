@@ -2,6 +2,11 @@ from dotenv import find_dotenv, load_dotenv
 import os
 from langchain_openai import OpenAIEmbeddings
 from uuid import uuid4
+
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 from langchain_chroma import Chroma
 import chromadb.api
 

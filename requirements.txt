@@ -17,3 +17,4 @@ streamlit
 streamlit-ext
 duckduckgo-search
 pydantic
+pysqlite3-binary
