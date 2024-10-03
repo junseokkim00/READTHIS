@@ -4,6 +4,44 @@ import requests
 from typing import List
 from uuid import uuid4
 from langchain_core.documents import Document
+from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from utils.arxiv_utils import load_paper_arxiv_api
+
+
+def duckduckgoSearch(query: str, max_results=100):
+    """
+    fetch paper from the web browser (duckduckgo)
+    ## args
+    - query: query for the browser
+    - max_results: number of result
+    """
+    wrapper = DuckDuckGoSearchAPIWrapper()
+    output = wrapper.results(query=query, max_results=max_results)
+    print(len(output))
+    arxivSet=set()
+    result=[]
+    idx=0
+    for inst in output:
+        if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
+            arxivId = inst['link'].split('/')[-1]
+            if 'v' in arxivId:
+                arxivId = arxivId.split('v')[0]
+            if arxivId not in arxivSet:
+                arxivSet.add(arxivId)
+                paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
+                document = Document(
+                    page_content=paper_info.summary,
+                    metadata={'title': paper_info.title,
+                              'year': paper_info.published.strftime("%Y"),
+                              'url':paper_info.entry_id,
+                              'type': "internet"},
+                    id=idx
+                )
+                result.append(document)
+                idx+=1
+    return result
+            
+            
 
 def fetch_paper_list(event: str, year: str, paper_type: str) -> List:
     """
