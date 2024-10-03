@@ -40,7 +40,7 @@ with st.sidebar:
         st.markdown(
             f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
         save_configuration = st.button("Save Zotero Configuration")
-    if save_configuration or ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
+    if save_configuration and ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
         if 'library_id' not in st.session_state:
             st.session_state['library_id'] = library_id
         if 'library_type' not in st.session_state:
