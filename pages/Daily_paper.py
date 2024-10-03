@@ -34,10 +34,7 @@ with st.sidebar:
             ["user", 'group']
         )
         zotero_api_key = st.text_input("Zotero API key", type="password")
-
-        library_id = '15219232'
-        library_type = 'user'
-        zotero_api_key = "L6Q6bXDgqXRZxjNmk5gCv7uX"
+        openai_api_key = st.text_input("OpenAI api key", type="password")
 
         st.markdown(
             "[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
@@ -51,6 +48,9 @@ with st.sidebar:
             st.session_state['library_type'] = library_type
         if 'zotero_api_key' not in st.session_state:
             st.session_state['zotero_api_key'] = zotero_api_key
+        if 'openai_api_key' not in st.session_state:
+            st.session_state['openai_api_key'] = openai_api_key
+
         st.success('Zotero configuration saved!', icon="✅")
         st.toast('✅ Zotero configuration saved!')
     else:
@@ -155,7 +155,8 @@ if check_config():
         st.write(
             f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
         with st.status(f"Generating DB...", expanded=True):
-            embeddings = get_embeddings()
+            embeddings = get_embeddings(
+                api_key=st.session_state['openai_api_key'])
             db = set_db(
                 name=db_name,
                 embeddings=embeddings,
