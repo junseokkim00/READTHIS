@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit_ext as ste
 import os
 from utils.zotero_utils import Zotero
 from utils.arxiv_utils import load_paper_arxiv_title
@@ -65,7 +64,7 @@ if check_config():
         collection_dict = zot.retrieve_collection()
         collection_names = [name for name in collection_dict]
         st.write(f"Found {len(collection_names)} collections in your Zotero")
-    collection_select = ste.selectbox(
+    collection_select = st.selectbox(
         "Choose collection for your next recommendation.",
         collection_names,
         index=None,
