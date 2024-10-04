@@ -2,7 +2,7 @@
 A SAAS for recent paper recommendations based on AI conferences
 
 
-## Novelty
+# Novelty
 + advanced search for specific settings
     + specific conference
     + paper type (short/long)
