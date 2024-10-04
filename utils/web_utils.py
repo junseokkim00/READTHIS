@@ -41,6 +41,34 @@ def duckduckgoSearch(query: str, max_results=100):
                 idx+=1
     return result
             
+def quickSearch(query: str, max_results=100):
+    """
+    fetch paper from the web browser (duckduckgo)
+    ## args
+    - query: query for the browser
+    - max_results: number of result
+    """
+    wrapper = DuckDuckGoSearchAPIWrapper()
+    output = wrapper.results(query=query, max_results=max_results)
+    print(len(output))
+    arxivSet=set()
+    idx=0
+    for inst in output:
+        if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
+            print("arxiv")
+            arxivId = inst['link'].split('/')[-1]
+            if 'v' in arxivId:
+                arxivId = arxivId.split('v')[0]  
+            paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
+            document = {
+                'title': paper_info.title,
+                'abstract': paper_info.summary,
+                'url': paper_info.entry_id,
+                'arxiv_id': arxivId
+            }
+            return document
+    return {}
+
             
 
 def fetch_paper_list(event: str, year: str, paper_type: str) -> List:

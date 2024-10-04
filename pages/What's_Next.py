@@ -53,9 +53,11 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     with st.status(f"retrieving cited paper...", expanded=True):
         time.sleep(1)
         embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
+        if os.path.isdir(f'./db/{arxiv_number}'):
+            shutil.rmtree(f'./db/{arxiv_number}')
         db = set_db(name=arxiv_number,
                     embeddings=embeddings,
-                    save_local=False)
+                    save_local=True)
         documents, cnt = get_cited_papers(arxiv_number)
         st.write(
             f"There is :red[{cnt}] papers highly related to the given paper.")

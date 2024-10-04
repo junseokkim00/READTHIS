@@ -12,9 +12,9 @@ st.markdown(
     """
     ReadThis is an open-source application for finding research paper like a pro
     We have several services for users.
-    1. `What's New?`: blah blah
-    2. `What's Next?`: blah blah
-    3. `What's awesome?`: blah blah
+    1. `What's Next?`: blah blah
+    2. `Daily Papers`: blah blah
+    3. `Describe it`: blah blah
     ### Want to learn more?
     - Check out [streamlit.io](https://streamlit.io)
     - Jump into our [documentation](https://docs.streamlit.io)
