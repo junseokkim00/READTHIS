@@ -22,10 +22,13 @@ st.subheader(
 
 
 def check_config():
-    return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state)
+    return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state and 'openai_api_key' in st.session_state)
 
 
 with st.sidebar:
+    openai_api_key = st.text_input("OpenAI api key", type="password")
+    st.markdown(
+            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
     with st.expander("Zotero Configuration", expanded=True):
         library_id = st.text_input("library_id", type="default")
         library_type = st.selectbox(
@@ -33,22 +36,19 @@ with st.sidebar:
             ["user", 'group']
         )
         zotero_api_key = st.text_input("Zotero API key", type="password")
-        openai_api_key = st.text_input("OpenAI api key", type="password")
+        
 
         st.markdown(
             "[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
         st.markdown(
             f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
+        
         save_configuration = st.button("Save Zotero Configuration")
     if save_configuration and ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
-        if 'library_id' not in st.session_state:
-            st.session_state['library_id'] = library_id
-        if 'library_type' not in st.session_state:
-            st.session_state['library_type'] = library_type
-        if 'zotero_api_key' not in st.session_state:
-            st.session_state['zotero_api_key'] = zotero_api_key
-        if 'openai_api_key' not in st.session_state:
-            st.session_state['openai_api_key'] = openai_api_key
+        st.session_state['library_id'] = library_id
+        st.session_state['library_type'] = library_type
+        st.session_state['zotero_api_key'] = zotero_api_key
+        st.session_state['openai_api_key'] = openai_api_key
 
         st.success('Zotero configuration saved!', icon="✅")
         st.toast('✅ Zotero configuration saved!')

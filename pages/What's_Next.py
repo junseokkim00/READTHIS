@@ -20,12 +20,15 @@ st.subheader(
 
 
 with st.sidebar:
-    judge_llm = st.checkbox("Use llm to judge paper")
-    rewrite_query = st.checkbox("rewrite query?")
+    judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
+    rewrite_query = st.checkbox("rewrite query?", disabled=True)
     openai_api_key = st.text_input("OpenAI api key", type="password")
 
+    st.markdown(
+            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+
     save_configuration = st.button("Save OPENAI API KEY")
-    if save_configuration or 'openai_api_key' in st.session_state:
+    if save_configuration and 'openai_api_key' in st.session_state:
         st.session_state['openai_api_key'] = openai_api_key
         st.success('OpenAI configuration saved!', icon="✅")
         st.toast('✅ OpenAI configuration saved!')
