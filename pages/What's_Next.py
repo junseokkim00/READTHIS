@@ -22,18 +22,20 @@ st.subheader(
 with st.sidebar:
     judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     rewrite_query = st.checkbox("rewrite query?", disabled=True)
-    openai_api_key = st.text_input("OpenAI api key", type="password")
-
-    st.markdown(
+    
+    
+    with st.expander("Openai api key setting"):
+        openai_api_key = st.text_input("OpenAI api key", type="password")
+        st.markdown(
             "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-
-    save_configuration = st.button("Save OPENAI API KEY")
-    if save_configuration and 'openai_api_key' in st.session_state:
-        st.session_state['openai_api_key'] = openai_api_key
-        st.success('OpenAI configuration saved!', icon="✅")
-        st.toast('✅ OpenAI configuration saved!')
+        save_configuration = st.button("Save configuration")
+        if save_configuration and openai_api_key != "":
+            st.session_state['openai_api_key'] = openai_api_key
+            st.toast("✅ Openai api key ready!")
+    if 'openai_api_key' in st.session_state:
+        st.success("OpenAI_api_key is configured!", icon='✅')
     else:
-        st.error('OpenAI configuration is not initialized!', icon="🚨")
+        st.error("OpenAI_api_key is not configured!", icon='🚨')
 
 # main side
 arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")

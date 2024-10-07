@@ -20,11 +20,18 @@ st.subheader(
 )
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI api key", type="password")
-    save_configuration = st.button("Save configuration")
-    if save_configuration and openai_api_key != "":
-        st.session_state['openai_api_key'] = openai_api_key
-        st.toast("✅ Openai api key ready!")
+    with st.expander("Openai api key setting"):
+        openai_api_key = st.text_input("OpenAI api key", type="password")
+        st.markdown(
+            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+        save_configuration = st.button("Save configuration")
+        if save_configuration and openai_api_key != "":
+            st.session_state['openai_api_key'] = openai_api_key
+            st.toast("✅ Openai api key ready!")
+    if 'openai_api_key' in st.session_state:
+        st.success("OpenAI_api_key is configured!", icon='✅')
+    else:
+        st.error("OpenAI_api_key is not configured!", icon='🚨')
 
 
 def check_config():
@@ -44,7 +51,8 @@ if prompt and check_config():
     else:
         with st.status(f"retrieving citations and cited papers...", expanded=True):
             time.sleep(1)
-            embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
+            embeddings = get_embeddings(
+                api_key=st.session_state['openai_api_key'])
             arxiv_number = document['arxiv_id']
             if os.path.isdir(f'./db/{arxiv_number}'):
                 shutil.rmtree(f'./db/{arxiv_number}')
@@ -72,8 +80,8 @@ if prompt and check_config():
                 result = db.similarity_search_with_score(prompt, k=10)
             except:
                 st.error("DB does not have documents.")
-        response=[]
-        inst={
+        response = []
+        inst = {
             'title': document['title'],
             'abstract': document['abstract'],
             'insights': None,
@@ -106,5 +114,3 @@ Score {recommendation['score']}
 {recommendation['abstract']}
 ## Insights
 {recommendation['insights']}''')
-        
-

@@ -26,10 +26,23 @@ def check_config():
 
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI api key", type="password")
-    st.markdown(
+    
+    with st.expander("Openai api key setting"):
+        openai_api_key = st.text_input("OpenAI api key", type="password")
+        st.markdown(
             "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-    with st.expander("Zotero Configuration", expanded=True):
+        save_configuration = st.button("Save configuration")
+        if save_configuration and openai_api_key != "":
+            st.session_state['openai_api_key'] = openai_api_key
+            st.toast("✅ Openai api key ready!")
+    if 'openai_api_key' in st.session_state:
+        st.success("OpenAI_api_key is configured!", icon='✅')
+    else:
+        st.error("OpenAI_api_key is not configured!", icon='🚨')
+
+    
+    
+    with st.expander("Zotero Configuration"):
         library_id = st.text_input("library_id", type="default")
         library_type = st.selectbox(
             "library_type",
@@ -48,7 +61,6 @@ with st.sidebar:
         st.session_state['library_id'] = library_id
         st.session_state['library_type'] = library_type
         st.session_state['zotero_api_key'] = zotero_api_key
-        st.session_state['openai_api_key'] = openai_api_key
 
         st.success('Zotero configuration saved!', icon="✅")
         st.toast('✅ Zotero configuration saved!')
