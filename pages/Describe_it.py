@@ -38,74 +38,77 @@ def check_config():
     return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
 
 
-prompt = st.text_input("Describe the idea of a paper you want to find.")
 
-if prompt and check_config():
-    with st.chat_message('user'):
-        st.write(prompt)
-    with st.status(f"Searching the idea on the internet...", expanded=True):
-        document = quickSearch(query=prompt)
-        print(document)
-    if document is {}:
-        st.error("Your idea looks novel. I cannot find it;;")
-    else:
-        with st.status(f"retrieving citations and cited papers...", expanded=True):
-            time.sleep(1)
-            embeddings = get_embeddings(
-                api_key=st.session_state['openai_api_key'])
-            arxiv_number = document['arxiv_id']
-            if os.path.isdir(f'./db/{arxiv_number}'):
-                shutil.rmtree(f'./db/{arxiv_number}')
-            db = set_db(name=arxiv_number,
-                        embeddings=embeddings,
-                        save_local=True)
-            documents, cnt = get_cited_papers(arxiv_number)
-            st.write(f"There are :red[{cnt}] cited papers.")
-            time.sleep(1)
-            citations, cite_cnt = get_citations(arxiv_number)
-            st.write(f"There are :red[{cite_cnt}] citations.")
-        with st.status(f"Adding documents...", expanded=True):
-            if cnt > 0:
-                db = add_documents(
-                    db=db,
-                    documents=documents
-                )
-            if cite_cnt > 0:
-                db = add_documents(
-                    db=db,
-                    documents=citations
-                )
-        with st.status(f"Retrieving...", expanded=True):
-            try:
-                result = db.similarity_search_with_score(prompt, k=10)
-            except:
-                st.error("DB does not have documents.")
-        response = []
-        inst = {
-            'title': document['title'],
-            'abstract': document['abstract'],
-            'insights': None,
-            'link': document['url'],
-            'score': 0,
-            'type': 'web search'
-        }
-        response.append(inst)
-        for idx, doc in enumerate(result):
-            abstract, title = doc[0].page_content, doc[0].metadata['title']
+if True:
+    st.error("Currently not available!", icon='🚨')
+else:
+    prompt = st.text_input("Describe the idea of a paper you want to find.")
+    if prompt and check_config():
+        with st.chat_message('user'):
+            st.write(prompt)
+        with st.status(f"Searching the idea on the internet...", expanded=True):
+            document = quickSearch(query=prompt)
+            print(document)
+        if document is {}:
+            st.error("Your idea looks novel. I cannot find it;;")
+        else:
+            with st.status(f"retrieving citations and cited papers...", expanded=True):
+                time.sleep(1)
+                embeddings = get_embeddings(
+                    api_key=st.session_state['openai_api_key'])
+                arxiv_number = document['arxiv_id']
+                if os.path.isdir(f'./db/{arxiv_number}'):
+                    shutil.rmtree(f'./db/{arxiv_number}')
+                db = set_db(name=arxiv_number,
+                            embeddings=embeddings,
+                            save_local=True)
+                documents, cnt = get_cited_papers(arxiv_number)
+                st.write(f"There are :red[{cnt}] cited papers.")
+                time.sleep(1)
+                citations, cite_cnt = get_citations(arxiv_number)
+                st.write(f"There are :red[{cite_cnt}] citations.")
+            with st.status(f"Adding documents...", expanded=True):
+                if cnt > 0:
+                    db = add_documents(
+                        db=db,
+                        documents=documents
+                    )
+                if cite_cnt > 0:
+                    db = add_documents(
+                        db=db,
+                        documents=citations
+                    )
+            with st.status(f"Retrieving...", expanded=True):
+                try:
+                    result = db.similarity_search_with_score(prompt, k=10)
+                except:
+                    st.error("DB does not have documents.")
+            response = []
             inst = {
-                'title': title,
-                'abstract': abstract,
+                'title': document['title'],
+                'abstract': document['abstract'],
                 'insights': None,
-                'link': doc[0].metadata['url'],
-                'score': doc[1],
-                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
+                'link': document['url'],
+                'score': 0,
+                'type': 'web search'
             }
             response.append(inst)
-        with st.chat_message("assistant"):
-            with st.container(border=True):
-                for idx, recommendation in enumerate(response):
-                    with st.expander(f"{idx}. {recommendation['title']}"):
-                        st.markdown(f'''# {recommendation['title']}
+            for idx, doc in enumerate(result):
+                abstract, title = doc[0].page_content, doc[0].metadata['title']
+                inst = {
+                    'title': title,
+                    'abstract': abstract,
+                    'insights': None,
+                    'link': doc[0].metadata['url'],
+                    'score': doc[1],
+                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
+                }
+                response.append(inst)
+            with st.chat_message("assistant"):
+                with st.container(border=True):
+                    for idx, recommendation in enumerate(response):
+                        with st.expander(f"{idx}. {recommendation['title']}"):
+                            st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
 

@@ -22,6 +22,7 @@ st.subheader(
 with st.sidebar:
     judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     rewrite_query = st.checkbox("rewrite query?", disabled=True)
+    use_web_search = st.checkbox("use web search?")
     
     
     with st.expander("Openai api key setting"):
@@ -74,12 +75,13 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     #     uncited_papers = retrieve_paper(category_list=categories)
     #     st.write(
     #         f"There is :red[{len(uncited_papers)}] papers that has the same category with the given paper.")
-    with st.status(f"retrieving from the internet...", expanded=True):
-        time.sleep(2.05)
-        searchOutput = duckduckgoSearch(query=query)
-        st.write(
-            f"There is :red[{len(searchOutput)}] papers searched from the internet."
-        )
+    if use_web_search:
+        with st.status(f"retrieving from the internet...", expanded=True):
+            time.sleep(2.05)
+            searchOutput = duckduckgoSearch(query=query)
+            st.write(
+                f"There is :red[{len(searchOutput)}] papers searched from the internet."
+            )
     with st.status(f"adding documents..."):
         if len(documents) > 0:
             db = add_documents(db=db,
@@ -89,11 +91,12 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
             db = add_documents(db=db,
                                documents=citations)
         print("ADDING INTERNET PAPERS...")
-        if len(searchOutput) > 0:
-            db = add_documents(
-                db=db,
-                documents=searchOutput
-            )
+        if use_web_search:
+            if len(searchOutput) > 0:
+                db = add_documents(
+                    db=db,
+                    documents=searchOutput
+                )
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
