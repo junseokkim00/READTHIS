@@ -12,7 +12,7 @@ def search_query(query: str):
     api_key = os.getenv('SEMANTIC_SCHOLAR_API_KEY')
     query_search = academic_graph_url + "/paper/search"
     query_params = {
-        'query': query, 'fields': 'title,abstract,authors,year,url,citationStyles', 'fieldsOfStudy': "Computer Science,Engineering" ,'limit': 100}
+        'query': query, 'fields': 'title,abstract,authors,year,url,citationStyles', 'fieldsOfStudy': "Computer Science,Engineering", 'limit': 100}
     headers = {'x-api-key': api_key}
 
     response = requests.get(query_search, params=query_params, headers=headers)
@@ -44,10 +44,11 @@ def search_query(query: str):
 
     # TODO search paper
 
+
 def get_citations(arxiv_id: str):
     load_dotenv(find_dotenv())
     references = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/references"
-    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url'}
+    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     headers = {'x-api-key': api_key}
     response = requests.get(references, params=params, headers=headers)
@@ -67,20 +68,23 @@ def get_citations(arxiv_id: str):
             paperId.add(inst['citedPaper']['paperId'])
             influential_papers.append(Document(
                 page_content=inst['citedPaper']['abstract'],
-                metadata={'title': inst['citedPaper']['title'],
+                metadata={'paperId': inst['citedPaper']['paperId'],
+                          'title': inst['citedPaper']['title'],
                           'year': inst['citedPaper']['year'],
                           'url': inst['citedPaper']['url'],
+                          'citationCount': inst['citedPaper']['citationCount'],
                           'type': 'citation'},
-                          
+
                 id=cnt
             ))
             # TODO should Document id be unique?
     return influential_papers, cnt
 
+
 def get_cited_papers(arxiv_id: str):
     load_dotenv(find_dotenv())
     citations = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/citations"
-    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url'}
+    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     headers = {'x-api-key': api_key}
     response = requests.get(citations, params=params, headers=headers)
@@ -103,9 +107,11 @@ def get_cited_papers(arxiv_id: str):
             paperId.add(inst['citingPaper']['paperId'])
             influential_papers.append(Document(
                 page_content=inst['citingPaper']['abstract'],
-                metadata={'title': inst['citingPaper']['title'],
+                metadata={'paperId': inst['citingPaper']['paperId'],
+                          'title': inst['citingPaper']['title'],
                           'year': inst['citingPaper']['year'],
                           'url': inst['citingPaper']['url'],
+                          'citationCount': inst['citingPaper']['citationCount'],
                           'type': 'cited paper'},
                 id=cnt
             ))
@@ -127,7 +133,25 @@ def convert_to_paper_id(paper_title: str):
     else:
         raise Exception(
             f"Request failed with status code {response.status_code}")
-    
+
+# def fetch_citation_num(paperId: str)->int:
+#     load_dotenv(find_dotenv())
+#     paper_detail_url = academic_graph_url + f"/paper/{paperId}"
+#     params = {'fields': 'title,paperId,citationCount'}
+#     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+#     headers = {'x-api-key': api_key} 
+#     response = requests.get(paper_detail_url, params=params, headers=headers)
+#     if response.status_code == 200:
+#         data = response.json()
+#         print(data)
+#         return 0
+#     else:
+#         raise Exception(
+#             f"Request failed with status code {response.status_code}")
+
+
+
+
 
 def get_embeddings(papers: list, batch_size=16):
     """
@@ -140,18 +164,19 @@ def get_embeddings(papers: list, batch_size=16):
     embeddings_by_paper_id = {}
     URL = "https://model-apis.semanticscholar.org/specter/v1/invoke"
     MAX_BATCH_SIZE = batch_size
-    cnt=0
+    cnt = 0
     while cnt < len(papers):
         upper_bound = min(cnt + MAX_BATCH_SIZE, len(papers))
         chunk = papers[cnt:upper_bound]
         response = requests.post(URL, json=chunk)
         if response.status_code != 200:
-            raise RuntimeError("Sorry, something went wrong, please try later!")
+            raise RuntimeError(
+                "Sorry, something went wrong, please try later!")
 
         for paper in response.json()["preds"]:
             embeddings_by_paper_id[paper["paper_id"]] = paper["embedding"]
         cnt = upper_bound
-    
+
     return embeddings_by_paper_id
 
 

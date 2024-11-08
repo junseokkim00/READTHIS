@@ -64,7 +64,7 @@ $ pip install -r requirements.txt
 
 [langchain tool searxng search](https://python.langchain.com/docs/integrations/tools/searx_search/)
 
-
+[scholarly for python](https://github.com/scholarly-python-package/scholarly?tab=readme-ov-file)
 
 <details>
 <summary>Click to toggle contents of `code`</summary>

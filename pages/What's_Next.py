@@ -23,6 +23,7 @@ with st.sidebar:
     judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_web_search = st.checkbox("use web search?")
+    sort_by_citations = st.checkbox("sort by citation number?")
     
     
     with st.expander("Openai api key setting"):
@@ -111,8 +112,27 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     # RETRIEVE
     with st.status(f"Retrieving...", expanded=True):
         try:
-            result = db.similarity_search_with_score(rewrite_query, k=10)
-        except:
+            result = db.similarity_search_with_score(rewrite_query, k=20)
+            # print(result)
+            if sort_by_citations:
+                result_cite_num=[]
+                for res in result:
+                    #  = res[0].metadata['paperId']
+                    # num=0
+                    # res[0].metadata['citations'] = num
+                    num = res[0].metadata['citationCount']
+                    print(num)
+                    result_cite_num.append((res, num))
+                result_cite_num.sort(key=lambda x: -x[1])
+                
+                if len(result_cite_num) >= 10:
+                    result = [t[0] for t in result_cite_num[:10]]
+                else:
+                    result = [t[0] for t in result_cite_num]
+            else:
+                result = result[:10] if len(result) >= 10 else result
+        except Exception as e:
+            print(e)
             st.error("DB does not have documents.")
         for res in result:
             print(res[0].metadata['title'])
@@ -152,6 +172,7 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
                 'insights': None,
                 'link': doc[0].metadata['url'],
                 'score': doc[1],
+                'citationCount': doc[0].metadata['citationCount'],
                 'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
             }
             response.append(inst)
@@ -160,7 +181,10 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     with st.chat_message('assistant'):
         with st.container(border=True):
             for idx, recommendation in enumerate(response):
-                with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']}"):
+                expander_title=f"{recommendation['title']} {recommendation['type']}"
+                if recommendation['citationCount'] > 100:
+                    expander_title = f"🧐 **{expander_title}**"
+                with st.expander(f"{idx}. "+expander_title):
                     st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
@@ -168,6 +192,9 @@ Score {recommendation['score']}
 Type {recommendation['type']}
 
 [Link]({recommendation['link']})
+
+Citation count: {recommendation['citationCount']}
+
 ## Abstract
 {recommendation['abstract']}
 ## Insights

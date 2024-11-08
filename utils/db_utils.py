@@ -3,6 +3,7 @@ import os
 from langchain_openai import OpenAIEmbeddings
 from uuid import uuid4
 
+# when testing in local file comment it!
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -21,6 +22,7 @@ def get_embeddings(name="openai", api_key="Your-Api-Key"):
     else:
         raise Exception(f'{name} is not currently supported as embeddings')
     return embeddings
+
 def load_db(name: str, embeddings):
     persist_directory=f"./db/{name}"
     if os.path.isdir(persist_directory):
