@@ -1,5 +1,6 @@
 # `readthis`
 A SAAS for recent paper recommendations based on AI conferences
+![image](./assets/logo.png)
 
 
 # Novelty
