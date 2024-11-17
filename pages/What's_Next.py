@@ -113,6 +113,7 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     with st.status(f"Retrieving...", expanded=True):
         try:
             result = db.similarity_search_with_score(rewrite_query, k=20)
+            result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
             # print(result)
             if sort_by_citations:
                 result_cite_num=[]

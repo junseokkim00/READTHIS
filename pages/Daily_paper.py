@@ -184,6 +184,7 @@ if check_config():
             )
         with st.status("Retrieving...", expanded=True):
             result = db.similarity_search_with_score(prompt, k=10)
+            result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
             for res in result:
                 print(res[0].metadata['title'])
         response = []

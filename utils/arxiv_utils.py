@@ -3,6 +3,35 @@ from sklearn.neighbors import NearestNeighbors
 import json
 from langchain_core.documents import Document
 from tqdm import tqdm
+import feedparser
+
+
+def load_paper_from_rss(category: str):
+    try:
+        url = "https://rss.arxiv.org/rss/"+category
+        feed = feedparser.parse(url)
+        feed_list = feed.entries
+        papers = []
+        for cnt, feed in enumerate(feed_list):
+            title = feed['title']
+            abstract = feed['summary'].split('\n')[-1]
+            if abstract.startswith("Abstract:"):
+                abstract = abstract.split("Abstract: ")[-1]
+            abstract = abstract.strip()
+            print(abstract)
+            papers.append(Document(
+                page_content=abstract,
+                metadata={
+                    'title': title,
+                    'year': feed['published_parsed'].tm_year,
+                    'url': feed['link']
+                },
+                id=cnt
+            ))
+        return papers
+    except Exception as e:
+        print(e)
+        return []
 
 
 def load_paper_arxiv_api(arxiv_id: str):
