@@ -254,6 +254,7 @@ arxiv id: {recommendation['arxiv_id']}
 
 ## Related papers
 {paper_relationship[recommendation['title']]}''')
+        shutil.rmtree(f'./db/{db_name}')
                         # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
                         # TODO comment for a moment...
                         # template=zot.zot.item_template('preprint')

@@ -1,4 +1,5 @@
 import streamlit as st
+from st_link_analysis import st_link_analysis, NodeStyle, EdgeStyle
 import os
 import shutil
 from utils.db_utils import set_db, get_embeddings, add_documents
@@ -31,7 +32,7 @@ with st.sidebar:
         index=None,
         placeholder="select embeddings"
     )
-    
+
     if embed_name == 'openai':
         with st.expander("Openai api key setting"):
             openai_api_key = st.text_input("OpenAI api key", type="password")
@@ -41,7 +42,7 @@ with st.sidebar:
             if save_configuration and openai_api_key != "":
                 st.session_state['openai_api_key'] = openai_api_key
                 st.toast("✅ Openai api key ready!")
-        
+
         if 'openai_api_key' in st.session_state:
             st.success("OpenAI_api_key is configured!", icon='✅')
         elif embed_name == 'huggingface':
@@ -53,6 +54,7 @@ with st.sidebar:
 arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
 query = st.chat_input("Enter the prompt")
 
+
 def check_config():
     if embed_name == "openai":
         return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
@@ -61,6 +63,7 @@ def check_config():
     else:
         return False
 
+
 if arxiv_number and query and check_config():
     with st.chat_message('user'):
         st.write(query)
@@ -68,6 +71,7 @@ if arxiv_number and query and check_config():
             f"Config: judge_llm: `{judge_llm}` rewrite_query: `{rewrite_query}`")
     with st.status(f"Searching paper of arxiv number {arxiv_number}...", expanded=True):
         metadata = load_paper_arxiv_api(arxiv_id=arxiv_number)
+        # print(metadata.links)
         title = metadata.title
         categories = metadata.categories
         st.write(f"Title: `{title}`")
@@ -101,7 +105,8 @@ if arxiv_number and query and check_config():
     with st.status(f"retrieving recommendation from semantic scholar...", expanded=True):
         time.sleep(2.05)
         recommendation, recommendation_cnt = recommend_paper(paper_title=title)
-        st.write(f"There is :red[{recommendation_cnt}] papers in semantic scholar recommendation")
+        st.write(
+            f"There is :red[{recommendation_cnt}] papers in semantic scholar recommendation")
     # with st.status(f"retrieving un-cited paper...", expanded=True):
     #     uncited_papers = retrieve_paper(category_list=categories)
     #     st.write(
@@ -149,7 +154,7 @@ if arxiv_number and query and check_config():
             result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
             # print(result)
             if sort_by_citations:
-                result_cite_num=[]
+                result_cite_num = []
                 for res in result:
                     #  = res[0].metadata['paperId']
                     # num=0
@@ -158,7 +163,7 @@ if arxiv_number and query and check_config():
                     print(num)
                     result_cite_num.append((res, num))
                 result_cite_num.sort(key=lambda x: -x[1])
-                
+
                 if len(result_cite_num) >= 10:
                     result = [t[0] for t in result_cite_num[:10]]
                 else:
@@ -212,10 +217,13 @@ if arxiv_number and query and check_config():
             response.append(inst)
         progress_bar.progress(int(100 * (idx+1) / len(result)),
                               text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
+
     with st.chat_message('assistant'):
+        # list_view, graph_view = st.tabs(['list', 'graph'])
+        # with list_view:
         with st.container(border=True):
             for idx, recommendation in enumerate(response):
-                expander_title=f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
+                expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
                 if recommendation['citationCount'] > 100:
                     expander_title = f"🧐 **{expander_title}**"
                 with st.expander(f"{idx}. "+expander_title):
@@ -233,10 +241,70 @@ Citation count: {recommendation['citationCount']}
 {recommendation['abstract']}
 ## Insights
 {recommendation['insights']}''')
-    copy_code = [f"{idx+1}. {resp['title']}" for idx,
-                 resp in enumerate(response)]
-    copy_code = '\n'.join(copy_code)
-    st.code(copy_code, language='markdown')
+
+        # with graph_view:
+        #     st.write("let me show you")
+        #     elements = {}
+        #     nodes = []
+        #     edges = []
+        #     current_node = {
+        #         "data": {"id": 0,
+        #                  "title": title,
+        #                  #  "abstract": metadata.summary,
+        #                  #  "link": metadata.entry_id,
+        #                  "score": 100,
+        #                  "label": "ORIGIN"}
+        #     }
+        #     nodes.append(current_node)
+        #     # add current paper
+
+        #     for idx, resp in enumerate(response):
+        #         id = idx+1
+        #         inst_node = {
+        #             "data": {
+        #                 "id": id,
+        #                 "title": resp['title'],
+        #                 # "abstract": resp['abstract'],
+        #                 # "link": resp['link'],
+        #                 "score": resp['score'],
+        #                 "label": "PAPER"
+        #             }
+        #         }
+        #         nodes.append(inst_node)
+        #         inst_edge = {
+        #             "data": {
+        #                 "id": id + len(response),
+        #                 "label": "CITED" if resp['type'] == 'cited paper' else "REFERENCE",
+        #                 "source": 0 if resp['type'] == 'cited paper' else id,
+        #                 "target": id if resp['type'] == 'cited paper' else 0
+        #             }
+        #         }
+        #         edges.append(inst_edge)
+
+        #     elements['nodes'] = nodes
+        #     elements['edges'] = edges
+
+        #     node_styles = [
+        #         NodeStyle(label="PAPER", color="#FF7F3E", caption="title", icon="description"),
+        #         NodeStyle(label="ORIGIN", color="#2A629A", caption="title", icon="description"),
+        #     ]
+        #     edge_styles = [
+        #         EdgeStyle(label="CITED", caption='label',
+        #                   labeled=True, directed=True),
+        #         EdgeStyle(label="REFERENCE", caption='label',
+        #                   labeled=True, directed=True),
+        #         EdgeStyle(label="SEMANTIC SCHOLARS", caption='label',
+        #                   labeled=True, directed=True),
+        #     ]
+        #     layout = {"name": "cose", "animate": "end", "nodeDimensionsIncludeLabels": False}
+        #     # print(elements)
+        #     st_link_analysis(elements, layout, node_styles, edge_styles)
+
+        copy_code = [f"{idx+1}. {resp['title']}" for idx,
+                     resp in enumerate(response)]
+        copy_code = '\n'.join(copy_code)
+        st.code(copy_code, language='markdown')
+        shutil.rmtree(f'./db/{arxiv_number}')
 elif check_config():
     st.error(
         "Please enter your current paper's arxiv number and your query.", icon='🚨')

@@ -131,6 +131,7 @@ Score {recommendation['score']}
 [Link]({recommendation['link']})
 ## Abstract
 {recommendation['abstract']}''')
+        shutil.rmtree(f'./db/{db_name}')
 else:
     with st.container(border=True):
         st.markdown("""## How to use Paper Hunt?
@@ -140,3 +141,4 @@ else:
     + `openai`: Fast but require api_key
     + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
 """)
+        
