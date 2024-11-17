@@ -13,6 +13,7 @@ from utils.category_list import category_map
 st.set_page_config(
     page_title="What's Next?",
     page_icon="📄",
+    layout="wide"
 )
 st.title("What's :red[Next]? 📄")
 st.subheader(

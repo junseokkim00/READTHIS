@@ -13,6 +13,7 @@ import json
 st.set_page_config(
     page_title="Daily Paper",
     page_icon="📝",
+    layout="wide"
 )
 
 st.title("Daily :red[Paper] 📄")

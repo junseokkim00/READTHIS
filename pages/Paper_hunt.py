@@ -14,6 +14,7 @@ from utils.category_list import category_map
 st.set_page_config(
     page_title="Paper Hunt",
     page_icon="🕵️‍♂️",
+    layout="wide"
 )
 st.title("Paper :red[Hunt] 🕵️‍♂️")
 st.subheader(

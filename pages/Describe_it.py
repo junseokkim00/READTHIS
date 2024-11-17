@@ -13,6 +13,7 @@ from utils.category_list import category_map
 st.set_page_config(
     page_title="Describe it",
     page_icon="✍️",
+    layout="wide"
 )
 st.title("Describe :red[it]!✍ ️")
 st.subheader(
