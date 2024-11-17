@@ -18,7 +18,7 @@ st.set_page_config(
 )
 st.title("Paper :red[Hunt] 🕵️‍♂️")
 st.subheader(
-    "find the latest paper to read from daily rss feed", divider=True)
+    "find the latest paper to read from daily :orange[rss feed]", divider=True)
 
 
 with st.sidebar:
