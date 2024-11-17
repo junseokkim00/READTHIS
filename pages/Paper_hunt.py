@@ -21,84 +21,121 @@ st.subheader(
 
 
 with st.sidebar:
-    category = st.selectbox(
+    # category = st.selectbox(
+    #     "select category for new arxiv papers",
+    #     (key for key in category_map),
+    #     index=None,
+    #     placeholder="select category"
+    # )
+    embed_name = st.selectbox(
+        "select embeddings",
+        ("openai", "huggingface"),
+        index=None,
+        placeholder="select embeddings"
+    )
+    if embed_name == 'openai':
+        with st.expander("Openai api key setting"):
+            openai_api_key = st.text_input("OpenAI api key", type="password")
+            st.markdown(
+                "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+            save_configuration = st.button("Save configuration")
+            if save_configuration and openai_api_key != "":
+                st.session_state['openai_api_key'] = openai_api_key
+                st.toast("✅ Openai api key ready!")
+        if 'openai_api_key' in st.session_state:
+            st.success("OpenAI_api_key is configured!", icon='✅')
+        elif embed_name == 'huggingface':
+            pass
+        else:
+            st.error("OpenAI_api_key is not configured!", icon='🚨')
+
+
+def check_config():
+    if embed_name == "openai":
+        return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
+    elif embed_name == "huggingface":
+        return True
+    else:
+        return False
+
+category = st.selectbox(
         "select category for new arxiv papers",
         (key for key in category_map),
         index=None,
         placeholder="select category"
     )
 
-    with st.expander("Openai api key setting"):
-        openai_api_key = st.text_input("OpenAI api key", type="password")
-        st.markdown(
-            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-        save_configuration = st.button("Save configuration")
-        if save_configuration and openai_api_key != "":
-            st.session_state['openai_api_key'] = openai_api_key
-            st.toast("✅ Openai api key ready!")
-    if 'openai_api_key' in st.session_state:
-        st.success("OpenAI_api_key is configured!", icon='✅')
-    else:
-        st.error("OpenAI_api_key is not configured!", icon='🚨')
-
-
-def check_config():
-    return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
-
-
-prompt = st.text_input("Describe the idea of a paper you want to find.")
-if prompt and check_config():
-
-    with st.chat_message('user'):
-        st.write(prompt)
-
+if category and check_config():
     with st.status(f"Fetching the latest rss feed", expanded=True):
         feed_list = load_paper_from_rss(category=category)
         st.write(
             f"you have :red[{len(feed_list)}] papers from the latest feed")
-    with st.status("setting up database for the latest paper..."):
-        embeddings = get_embeddings(
-            api_key=st.session_state['openai_api_key']
-        )
-        today = date.today()
-        today = today.strftime("%Y-%m-%d")
-        db_name = f"{today}-{category}"
-        if os.path.isdir(f'./db/{db_name}'):
-            shutil.rmtree(f'./db/{db_name}')
-        db = set_db(name=db_name,
-                    embeddings=embeddings,
-                    save_local=True)
-        db = add_documents(
-            db=db,
-            documents=feed_list
-        )
-    with st.status(f"Retrieving...", expanded=True):
-        try:
-            result = db.similarity_search_with_score(prompt, k=100)
-            result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
-        except:
-            st.error("DB does not have documents.")
-    
-        response = []
-        for idx, doc in enumerate(result):
-            abstract, title = doc[0].page_content, doc[0].metadata['title']
-            inst = {
-                'title': title,
-                'abstract': abstract,
-                'identifier': None,
-                'link': doc[0].metadata['url'],
-                'score': doc[1],
-                'type': f":orange[rss]"
-            }
-            response.append(inst)
-    
-    with st.container(border=True):
-        for idx, recommendation in enumerate(response):
-            with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']} {recommendation['score']} %"):
-                st.markdown(f'''# {recommendation['title']}
+    if len(feed_list) == 0:
+        st.error("Try to visit next time!")
+    else:
+        prompt = st.text_input("Describe the idea of a paper you want to find.")
+        with st.chat_message('user'):
+            st.write(prompt)
+        with st.status("setting up database for the latest paper..."):
+            # embeddings = get_embeddings(
+            #     api_key=st.session_state['openai_api_key']
+            # )
+            if embed_name == "openai":
+                embeddings = get_embeddings(
+                    api_key=st.session_state['openai_api_key']
+                )
+            else:
+                embeddings = get_embeddings(
+                    name=embed_name
+                )
+            today = date.today()
+            today = today.strftime("%Y-%m-%d")
+            db_name = f"{today}-{category}"
+            if os.path.isdir(f'./db/{db_name}'):
+                shutil.rmtree(f'./db/{db_name}')
+            db = set_db(name=db_name,
+                        embeddings=embeddings,
+                        save_local=True)
+            db = add_documents(
+                db=db,
+                documents=feed_list
+            )
+        with st.status(f"Retrieving...", expanded=True):
+            try:
+                result = db.similarity_search_with_score(prompt, k=100)
+                result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
+            except:
+                st.error("DB does not have documents.")
+
+            response = []
+            for idx, doc in enumerate(result):
+                abstract, title = doc[0].page_content, doc[0].metadata['title']
+                inst = {
+                    'title': title,
+                    'abstract': abstract,
+                    'identifier': None,
+                    'link': doc[0].metadata['url'],
+                    'score': doc[1],
+                    'type': f":orange[rss]"
+                }
+                response.append(inst)
+
+        with st.container(border=True):
+            for idx, recommendation in enumerate(response):
+                with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']} {recommendation['score']} %"):
+                    st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
 
 [Link]({recommendation['link']})
 ## Abstract
 {recommendation['abstract']}''')
+else:
+    with st.container(border=True):
+        st.markdown("""## How to use Paper Hunt?
+### 1. configure your setting
++ select category: categories denotation is presented [here](https://arxiv.org/category_taxonomy)
++ select embeddings
+    + `openai`: Fast but require api_key
+    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
+""")

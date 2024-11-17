@@ -21,27 +21,28 @@ st.subheader(
 )
 
 
-def check_config():
-    return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state and 'openai_api_key' in st.session_state)
-
-
 with st.sidebar:
     use_web_search = st.checkbox("use web search?")
-    with st.expander("Openai api key setting"):
-        openai_api_key = st.text_input("OpenAI api key", type="password")
-        st.markdown(
-            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-        save_configuration = st.button("Save configuration")
-        if save_configuration and openai_api_key != "":
-            st.session_state['openai_api_key'] = openai_api_key
-            st.toast("✅ Openai api key ready!")
-    if 'openai_api_key' in st.session_state:
-        st.success("OpenAI_api_key is configured!", icon='✅')
-    else:
-        st.error("OpenAI_api_key is not configured!", icon='🚨')
+    embed_name = st.selectbox(
+        "select embeddings",
+        ("openai", "huggingface"),
+        index=None,
+        placeholder="select embeddings"
+    )
+    if embed_name == 'openai':
+        with st.expander("Openai api key setting"):
+            openai_api_key = st.text_input("OpenAI api key", type="password")
+            st.markdown(
+                "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+            save_configuration = st.button("Save configuration")
+            if save_configuration and openai_api_key != "":
+                st.session_state['openai_api_key'] = openai_api_key
+                st.toast("✅ Openai api key ready!")
+        if 'openai_api_key' in st.session_state:
+            st.success("OpenAI_api_key is configured!", icon='✅')
+        else:
+            st.error("OpenAI_api_key is not configured!", icon='🚨')
 
-    
-    
     with st.expander("Zotero Configuration"):
         library_id = st.text_input("library_id", type="default")
         library_type = st.selectbox(
@@ -49,23 +50,31 @@ with st.sidebar:
             ["user", 'group']
         )
         zotero_api_key = st.text_input("Zotero API key", type="password")
-        
 
         st.markdown(
             "[Learn more about Zotero API](https://www.zotero.org/support/dev/web_api/v3/start)")
         st.markdown(
             f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
-        
+
         save_configuration = st.button("Save Zotero Configuration")
     if save_configuration:
         st.session_state['library_id'] = library_id
         st.session_state['library_type'] = library_type
         st.session_state['zotero_api_key'] = zotero_api_key
-
-        st.success('Zotero configuration saved!', icon="✅")
         st.toast('✅ Zotero configuration saved!')
+
+    if ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state):
+        st.success('Zotero configuration saved!', icon="✅")
     else:
         st.error('Zotero configuration is not initialized!', icon="🚨")
+
+
+def check_config():
+    if embed_name == 'openai':
+        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state and 'openai_api_key' in st.session_state)
+    else:
+        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state)
+
 
 # if True:
 #     st.error("Currently not available!", icon='🚨')
@@ -73,8 +82,8 @@ with st.sidebar:
 if check_config():
     with st.status('initializing Zotero...'):
         zot = Zotero(library_id=st.session_state['library_id'],
-                    library_type=st.session_state['library_type'],
-                    api_key=st.session_state['zotero_api_key'])
+                     library_type=st.session_state['library_type'],
+                     api_key=st.session_state['zotero_api_key'])
     with st.status('fetching collections...', expanded=True):
         collection_dict = zot.retrieve_collection()
         collection_names = [name for name in collection_dict]
@@ -118,7 +127,7 @@ if check_config():
                 titles.append(title)
                 # st.write(f"title: {title}\tarxivId: {arxivId}")
             st.write(
-                f"You have {len(paper)} paper in collection `{collection_select}`")
+                f"You have :red[{len(paper)}] paper in collection `{collection_select}`")
         total_paper_db = []
         with st.status(f"retrieving citations...", expanded=True):
             title_set = set()
@@ -165,13 +174,20 @@ if check_config():
                         title_set.add(doc.metadata['title'])
                         total_paper_db.append(doc)
                         total_cnt += 1
-                st.write(f"You got {total_cnt} papers via browsing the internet.")
+                st.write(
+                    f"You got {total_cnt} papers via browsing the internet.")
 
         st.write(
             f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
         with st.status(f"Generating DB...", expanded=True):
-            embeddings = get_embeddings(
-                api_key=st.session_state['openai_api_key'])
+            if embed_name == "openai":
+                embeddings = get_embeddings(
+                    api_key=st.session_state['openai_api_key']
+                )
+            else:
+                embeddings = get_embeddings(
+                    name=embed_name
+                )
             db = set_db(
                 name=db_name,
                 embeddings=embeddings,
@@ -210,11 +226,11 @@ if check_config():
             }
             response.append(inst)
             progress_bar.progress(int(100 * (idx+1) / len(result)),
-                                text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
+                                  text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
         with st.chat_message('assistant'):
             with st.container(border=True):
                 for idx, recommendation in enumerate(response):
-                    expander_title=f"{recommendation['title']} {recommendation['type']}"
+                    expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
                     if recommendation['citationCount'] > 100:
                         expander_title = f"🧐 **{expander_title}**"
                     with st.expander(f"{idx}. "+expander_title):
@@ -275,5 +291,23 @@ arxiv id: {recommendation['arxiv_id']}
 # extra: archiveID [category]
 # collections: key"""
 
-else:
+elif embed_name == 'huggingface':
     st.error('Please setup your **zotero configuration**(left sidebar) first if you want to use this service!', icon='🚨')
+elif embed_name == 'openai':
+    st.error('Please setup your **zotero configuration** and **openai_api_key** (left sidebar) first if you want to use this service!', icon='🚨')
+else:
+    with st.container(border=True):
+        st.markdown("""## How to use Daily paper?
+### 1. configure your setting
++ select embeddings
+    + `openai`: Fast but require api_key
+    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
++ configure Zotero
+    + `library_id`: enter your id for the access (user id for api calls)
+    + `library_type`: `user` if you are accessing your own Zotero Library, or `group` if you are acessing the shared group library
+    + `zotero_api_key`: api key for api calls of Zotero
+
+[More info about zotero configuration!](https://github.com/urschrei/pyzotero)
+### 2. check for advanced search
++ `use web search`: also retrieve relevant paper from duckduckgo search (currently not available)
+""")

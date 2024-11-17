@@ -48,7 +48,8 @@ def search_query(query: str):
 def get_citations(arxiv_id: str):
     load_dotenv(find_dotenv())
     references = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/references"
-    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url,citationCount'}
+    params = {'limit': 1000,
+              'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     headers = {'x-api-key': api_key}
     response = requests.get(references, params=params, headers=headers)
@@ -84,7 +85,8 @@ def get_citations(arxiv_id: str):
 def get_cited_papers(arxiv_id: str):
     load_dotenv(find_dotenv())
     citations = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/citations"
-    params = {'limit': 1000, 'fields': 'title,abstract,year,isInfluential,url,citationCount'}
+    params = {'limit': 1000,
+              'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     headers = {'x-api-key': api_key}
     response = requests.get(citations, params=params, headers=headers)
@@ -139,7 +141,7 @@ def convert_to_paper_id(paper_title: str):
 #     paper_detail_url = academic_graph_url + f"/paper/{paperId}"
 #     params = {'fields': 'title,paperId,citationCount'}
 #     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
-#     headers = {'x-api-key': api_key} 
+#     headers = {'x-api-key': api_key}
 #     response = requests.get(paper_detail_url, params=params, headers=headers)
 #     if response.status_code == 200:
 #         data = response.json()
@@ -148,9 +150,6 @@ def convert_to_paper_id(paper_title: str):
 #     else:
 #         raise Exception(
 #             f"Request failed with status code {response.status_code}")
-
-
-
 
 
 def get_embeddings(papers: list, batch_size=16):
@@ -185,7 +184,7 @@ def recommend_paper(paper_title: str):
     paper_id = convert_to_paper_id(paper_title)
     print(paper_id)
     recommend = recommendation_url + f"/papers/forpaper/{paper_id}"
-    params = {'fields': "title,url,year,abstract"}
+    params = {'fields': "title,url,year,abstract,citationCount"}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     headers = {'x-api-key': api_key}
     response = requests.get(recommend, params=params, headers=headers)
@@ -206,11 +205,28 @@ def recommend_paper(paper_title: str):
         if inst['abstract'] is not None and inst['title'] not in topic:
             cnt += 1
             topic.add(inst['title'])
-            recommended_papers.append(Document(
-                page_content=inst['abstract'],
-                metadata={'title': inst['title'],
-                          'year': inst['year'],
-                          'url': inst['url']},
-                id=cnt
-            ))
+            recommended_papers.append(
+                Document(
+                    page_content=inst['abstract'], 
+                    metadata={
+                        'paperId': inst['paperId'],
+                        'title': inst['title'],
+                        'year': inst['year'],
+                        'url': inst['url'],
+                        'citationCount': inst['citationCount'],
+                        'type': 'semantic scholar recommendation'},
+                    id=cnt
+                )
+            )
     return recommended_papers, cnt
+
+    # influential_papers.append(Document(
+    #     page_content=inst['citingPaper']['abstract'],
+    #     metadata={'paperId': inst['citingPaper']['paperId'],
+    #               'title': inst['citingPaper']['title'],
+    #               'year': inst['citingPaper']['year'],
+    #               'url': inst['citingPaper']['url'],
+    #               'citationCount': inst['citingPaper']['citationCount'],
+    #               'type': 'cited paper'},
+    #     id=cnt
+    # ))

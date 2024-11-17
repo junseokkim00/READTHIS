@@ -21,9 +21,10 @@ st.markdown(
     """
     ReadThis is an open-source application for finding research paper like a pro
     We have several services for users.
-    1. `What's Next?`: blah blah
-    2. `Daily Papers`: blah blah
-    3. `Describe it`: blah blah
+    1. 📄 `What's Next?`: find the next paper based on your currently readings
+    2. 📝 `Daily Papers`: find related papers based on your :red[Zotero] collection
+    3. `Describe it`: find papers based on the internet
+    4. 🕵️‍♂️ `Paper Hunt`: find the latest paper from the latest arxiv :orange[rss feed]
     ### How to use this?
     1. configure `openai_api_key` in the left sidebar by adding your `OPENAI_API_KEY`
         - we use text-embedding from openai, so it should not be a huge burden for the user.
@@ -31,6 +32,6 @@ st.markdown(
     
     ### Contact us
      + [Linkedin](https://www.linkedin.com/in/junseok-kim-b93373214/)
-     + Contribution [Github repo](www.github.com)
+     + Contribution [Github repo](https://github.com/junseokkim00/READTHIS.git)
 """
 )

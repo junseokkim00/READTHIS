@@ -1,6 +1,7 @@
 from dotenv import find_dotenv, load_dotenv
 import os
 from langchain_openai import OpenAIEmbeddings
+from langchain.embeddings import HuggingFaceBgeEmbeddings
 from uuid import uuid4
 
 # when testing in local file comment it!
@@ -19,6 +20,15 @@ def get_embeddings(name="openai", api_key="Your-Api-Key"):
     if name == "openai":
         # os.environ['OPENAI_API_KEY'] = os.getenv('OPENAI_API_KEY')
         embeddings = OpenAIEmbeddings(api_key=api_key)
+    elif name == "huggingface":
+        model_name="BAAI/bge-small-en"
+        model_kwargs = {'device': 'cpu'}
+        encode_kwargs = {'normalize_embeddings': True}
+        embeddings = HuggingFaceBgeEmbeddings(
+            model_name=model_name,
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs
+        )
     else:
         raise Exception(f'{name} is not currently supported as embeddings')
     return embeddings
@@ -54,5 +64,6 @@ def set_db(name: str, embeddings, save_local=True):
 
 def add_documents(db, documents):
     uuids = [str(uuid4()) for _ in range(len(documents))]
+    print("uuids ready")
     db.add_documents(documents=documents, ids=uuids)
     return db

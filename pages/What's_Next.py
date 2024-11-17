@@ -24,26 +24,43 @@ with st.sidebar:
     rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_web_search = st.checkbox("use web search?")
     sort_by_citations = st.checkbox("sort by citation number?")
+    embed_name = st.selectbox(
+        "select embeddings",
+        ("openai", "huggingface"),
+        index=None,
+        placeholder="select embeddings"
+    )
     
-    
-    with st.expander("Openai api key setting"):
-        openai_api_key = st.text_input("OpenAI api key", type="password")
-        st.markdown(
-            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-        save_configuration = st.button("Save configuration")
-        if save_configuration and openai_api_key != "":
-            st.session_state['openai_api_key'] = openai_api_key
-            st.toast("✅ Openai api key ready!")
-    if 'openai_api_key' in st.session_state:
-        st.success("OpenAI_api_key is configured!", icon='✅')
-    else:
-        st.error("OpenAI_api_key is not configured!", icon='🚨')
+    if embed_name == 'openai':
+        with st.expander("Openai api key setting"):
+            openai_api_key = st.text_input("OpenAI api key", type="password")
+            st.markdown(
+                "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+            save_configuration = st.button("Save configuration")
+            if save_configuration and openai_api_key != "":
+                st.session_state['openai_api_key'] = openai_api_key
+                st.toast("✅ Openai api key ready!")
+        
+        if 'openai_api_key' in st.session_state:
+            st.success("OpenAI_api_key is configured!", icon='✅')
+        elif embed_name == 'huggingface':
+            pass
+        else:
+            st.error("OpenAI_api_key is not configured!", icon='🚨')
 
 # main side
 arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
 query = st.chat_input("Enter the prompt")
 
-if arxiv_number and query and 'openai_api_key' in st.session_state:
+def check_config():
+    if embed_name == "openai":
+        return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
+    elif embed_name == "huggingface":
+        return True
+    else:
+        return False
+
+if arxiv_number and query and check_config():
     with st.chat_message('user'):
         st.write(query)
         st.write(
@@ -56,7 +73,15 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
         st.write(f"Categories: `{categories}`")
     with st.status(f"retrieving cited paper...", expanded=True):
         time.sleep(1)
-        embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
+        # embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
+        if embed_name == "openai":
+            embeddings = get_embeddings(
+                api_key=st.session_state['openai_api_key']
+            )
+        else:
+            embeddings = get_embeddings(
+                name=embed_name
+            )
         if os.path.isdir(f'./db/{arxiv_number}'):
             shutil.rmtree(f'./db/{arxiv_number}')
         db = set_db(name=arxiv_number,
@@ -72,6 +97,10 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
+    with st.status(f"retrieving recommendation from semantic scholar...", expanded=True):
+        time.sleep(2.05)
+        recommendation, recommendation_cnt = recommend_paper(paper_title=title)
+        st.write(f"There is :red[{recommendation_cnt}] papers in semantic scholar recommendation")
     # with st.status(f"retrieving un-cited paper...", expanded=True):
     #     uncited_papers = retrieve_paper(category_list=categories)
     #     st.write(
@@ -98,6 +127,9 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
                     db=db,
                     documents=searchOutput
                 )
+        if len(recommendation) > 0:
+            db = add_documents(db=db,
+                               documents=recommendation)
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
@@ -161,7 +193,7 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
                     'insights': output['insights'],
                     'link': link,
                     'score': doc[1],
-                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
+                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":yellow[{doc[0].metadata['type']}]"
                 }
                 response.append(inst)
             else:
@@ -174,7 +206,7 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
                 'link': doc[0].metadata['url'],
                 'score': doc[1],
                 'citationCount': doc[0].metadata['citationCount'],
-                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
+                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":yellow[{doc[0].metadata['type']}]"
             }
             response.append(inst)
         progress_bar.progress(int(100 * (idx+1) / len(result)),
@@ -182,7 +214,7 @@ if arxiv_number and query and 'openai_api_key' in st.session_state:
     with st.chat_message('assistant'):
         with st.container(border=True):
             for idx, recommendation in enumerate(response):
-                expander_title=f"{recommendation['title']} {recommendation['type']}"
+                expander_title=f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
                 if recommendation['citationCount'] > 100:
                     expander_title = f"🧐 **{expander_title}**"
                 with st.expander(f"{idx}. "+expander_title):
@@ -204,12 +236,22 @@ Citation count: {recommendation['citationCount']}
                  resp in enumerate(response)]
     copy_code = '\n'.join(copy_code)
     st.code(copy_code, language='markdown')
-elif 'openai_api_key' in st.session_state:
+elif check_config():
     st.error(
         "Please enter your current paper's arxiv number and your query.", icon='🚨')
-else:
+elif embed_name == 'openai':
     st.error('Please setup your **OpenAI configuration**(left sidebar) first if you want to use this service!', icon='🚨')
-
+else:
+    with st.container(border=True):
+        st.markdown("""## How to use What's Next?
+### 1. configure your setting
++ select embeddings
+    + `openai`: Fast but require api_key
+    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
+### 2. check for advanced search
++ `use web search`: also retrieve relevant paper from duckduckgo search (currently not available)
++ `sort by citation search`: relies on citation count of the retrieved paper.
+    """)
 #     col1, col2 = st.columns(2)
 #     with col1:
 #         st.header('pdf')
