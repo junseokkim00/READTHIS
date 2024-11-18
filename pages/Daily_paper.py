@@ -112,14 +112,14 @@ if check_config():
             key = collection_dict[collection_select]
             paper = zot.retrieve_collection_papers(key=key)
             paper_json = [{'title': title, 'DOI': DOI} for title, DOI in paper]
-            if os.path.isdir(f'./collections/{key}'):
-                with open(f'./collections/{key}', 'r') as f:
-                    collections_json = json.load(f)
-                if collections_json == paper_json:
-                    print("not updated.")
+            # if os.path.isdir(f'./collections/{key}'):
+            #     with open(f'./collections/{key}', 'r') as f:
+            #         collections_json = json.load(f)
+            #     if collections_json == paper_json:
+            #         print("not updated.")
 
-            with open(f'./collections/{key}', 'w') as f:
-                json.dump(paper_json, f)
+            # with open(f'./collections/{key}', 'w') as f:
+            #     json.dump(paper_json, f)
             arxivIds = []
             titles = []
             for title, DOI in paper:
