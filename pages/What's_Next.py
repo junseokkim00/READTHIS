@@ -27,6 +27,8 @@ with st.sidebar:
     # judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     # rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_web_search = st.checkbox("use web search?", disabled=True)
+    fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+    st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     sort_by_citations = st.checkbox("sort by citation number?")
     embed_name = st.selectbox(
         "select embeddings",
@@ -58,6 +60,7 @@ query = st.chat_input("Enter the prompt")
 # settings
 judge_llm = False
 rewrite_query = False
+
 
 def check_config():
     if embed_name == "openai":
@@ -106,15 +109,13 @@ if arxiv_number and query and check_config():
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
-    with st.status(f"retrieving recommendation from semantic scholar...", expanded=True):
-        time.sleep(2.05)
-        recommendation, recommendation_cnt = recommend_paper(paper_title=title)
-        st.write(
-            f"There is :red[{recommendation_cnt}] papers in semantic scholar recommendation")
-    # with st.status(f"retrieving un-cited paper...", expanded=True):
-    #     uncited_papers = retrieve_paper(category_list=categories)
-    #     st.write(
-    #         f"There is :red[{len(uncited_papers)}] papers that has the same category with the given paper.")
+    if fetch_from_s2orc:
+        with st.status(f"retrieving recommendation from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
+            time.sleep(2.05)
+            recommendation, recommendation_cnt = recommend_paper(paper_title=title)
+            st.write(
+                f"There is :red[{recommendation_cnt}] papers in Semantic Scholar Open Research Corpus.")
+    
     if use_web_search:
         with st.status(f"retrieving from the internet...", expanded=True):
             time.sleep(2.05)
@@ -200,10 +201,9 @@ if arxiv_number and query and check_config():
                 inst = {
                     'title': title,
                     'abstract': abstract,
-                    'insights': output['insights'],
                     'link': link,
                     'score': doc[1],
-                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":yellow[{doc[0].metadata['type']}]"
+                    'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":violet[{doc[0].metadata['type']}]"
                 }
                 response.append(inst)
             else:
@@ -213,22 +213,22 @@ if arxiv_number and query and check_config():
                 'title': title,
                 'score': doc[1],
                 'abstract': abstract,
-                'insights': None,
                 'link': doc[0].metadata['url'],
                 'citationCount': doc[0].metadata['citationCount'],
-                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":yellow[{doc[0].metadata['type']}]"
+                'type': doc[0].metadata['type']
             }
             response.append(inst)
         progress_bar.progress(int(100 * (idx+1) / len(result)),
                               text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
 
     with st.chat_message('assistant'):
-        
+
         list_view, dataframe_view = st.tabs(['list', 'dataframe'])
         with list_view:
             with st.container(border=True):
                 for idx, recommendation in enumerate(response):
-                    expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
+                    paper_type = f":red[{recommendation['type']}]" if recommendation['type'] == "citation" else f":blue[{recommendation['type']}]" if recommendation['type'] == "cited paper" else f":green[{recommendation['type']}]" if recommendation['type'] == 'internet' else f":violet[{recommendation['type']}]"
+                    expander_title = f"{recommendation['title']} {paper_type} ({recommendation['score']}%)"
                     if recommendation['citationCount'] > 100:
                         expander_title = f"🧐 **{expander_title}**"
                     with st.expander(f"{idx}. "+expander_title):
@@ -236,18 +236,37 @@ if arxiv_number and query and check_config():
 
 Score {recommendation['score']}
 
-Type {recommendation['type']}
+Type {paper_type}
 
 [Link]({recommendation['link']})
 
 Citation count: {recommendation['citationCount']}
 
 ## Abstract
-{recommendation['abstract']}
-## Insights
-{recommendation['insights']}''')
+{recommendation['abstract']}''')
         with dataframe_view:
-            st.dataframe(pd.DataFrame(response))
+            df = pd.DataFrame(response)
+            # st.dataframe(df)
+            st.data_editor(
+                df,
+                column_config={
+                    "link": st.column_config.LinkColumn(
+                        "URL",
+                        max_chars=100,
+                        display_text="Open Link"
+                    ),
+                    "title": st.column_config.TextColumn(
+                        "title", max_chars=100
+                    ),
+                    "abstract": st.column_config.TextColumn(
+                        "abstract", max_chars=100
+                    ),
+                    "score": st.column_config.NumberColumn(
+                        "score", format="%f %%"
+                    ),
+                },
+            )
+
         # with graph_view:
         #     st.write("let me show you")
         #     elements = {}
@@ -325,6 +344,7 @@ else:
     + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
 ### 2. check for advanced search
 + `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
++ `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
 + `sort by citation search`: relies on citation count of the retrieved paper.
     """)
 #     col1, col2 = st.columns(2)

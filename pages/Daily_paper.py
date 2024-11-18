@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from utils.zotero_utils import Zotero
 from utils.arxiv_utils import load_paper_arxiv_title
-from utils.semantic_scholar_utils import get_cited_papers, get_citations
+from utils.semantic_scholar_utils import get_cited_papers, get_citations, recommend_paper
 from utils.db_utils import set_db, get_embeddings, add_documents
 from utils.web_utils import duckduckgoSearch
 from collections import defaultdict
@@ -25,6 +25,8 @@ st.subheader(
 
 with st.sidebar:
     use_web_search = st.checkbox("use web search?", disabled=True)
+    fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+    st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     embed_name = st.selectbox(
         "select embeddings",
         ("openai", "huggingface"),
@@ -131,26 +133,9 @@ if check_config():
             st.write(
                 f"You have :red[{len(paper)}] paper in collection `{collection_select}`")
         total_paper_db = []
-        with st.status(f"retrieving citations...", expanded=True):
-            title_set = set()
-            total_cnt = 0
-            for title, arxivId in arxivIds:
-                st.write(f"fetching citations of `{title}`...")
-                time.sleep(2.05)
-                citations, cite_cnt = get_citations(arxiv_id=arxivId)
-                for citation in citations:
-                    paper_relationship[citation.metadata['title']].append(
-                        title)
-                    if citation.metadata['title'] not in title_set and citation.metadata['title'] not in titles:
-                        title_set.add(citation.metadata['title'])
-                        total_paper_db.append(citation)
-                        total_cnt += 1
-                    else:
-                        cite_cnt -= 1
-                st.write(f":red[{cite_cnt}] paper is added to the db.")
-            st.write(f"total number of citation paper: {total_cnt}")
 
         with st.status(f"retrieving cited paper...", expanded=True):
+            title_set = set()
             total_cnt = 0
             for title, arxivId in arxivIds:
                 st.write(f"fetching cited papers of `{title}`...")
@@ -167,6 +152,24 @@ if check_config():
                         cited_cnt -= 1
                 st.write(f":red[{cited_cnt}] paper is added to the db.")
             st.write(f"total number of cited paper: {total_cnt}")
+
+        with st.status(f"retrieving citations...", expanded=True):
+            total_cnt = 0
+            for title, arxivId in arxivIds:
+                st.write(f"fetching citations of `{title}`...")
+                time.sleep(2.05)
+                citations, cite_cnt = get_citations(arxiv_id=arxivId)
+                for citation in citations:
+                    paper_relationship[citation.metadata['title']].append(
+                        title)
+                    if citation.metadata['title'] not in title_set and citation.metadata['title'] not in titles:
+                        title_set.add(citation.metadata['title'])
+                        total_paper_db.append(citation)
+                        total_cnt += 1
+                    else:
+                        cite_cnt -= 1
+                st.write(f":red[{cite_cnt}] paper is added to the db.")
+            st.write(f"total number of citation paper: {total_cnt}")
         if use_web_search:
             with st.status(f"retrieving from the internet...", expanded=True):
                 total_cnt = 0
@@ -178,6 +181,25 @@ if check_config():
                         total_cnt += 1
                 st.write(
                     f"You got {total_cnt} papers via browsing the internet.")
+        if fetch_from_s2orc:
+            with st.status(f"retrieving papers from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
+                total_cnt = 0
+                for title, arxivId in arxivIds:
+                    st.write(f"fetching relevant papers of `{title}`...")
+                    time.sleep(2.05)
+                    # citations, cite_cnt = get_citations(arxiv_id=arxivId)
+                    recommendations, recommendation_cnt = recommend_paper(paper_title=title)
+                    for recommendation in recommendations:
+                        # paper_relationship[recommendation.metadata['title']].append(
+                        #     title)
+                        if recommendation.metadata['title'] not in title_set and recommendation.metadata['title'] not in titles:
+                            title_set.add(recommendation.metadata['title'])
+                            total_paper_db.append(recommendation)
+                            total_cnt += 1
+                        else:
+                            recommendation_cnt -= 1
+                    st.write(f":red[{recommendation_cnt}] paper is added to the db.")
+                st.write(f"total number of relevant paper from S2ORC: {total_cnt}")
 
         st.write(
             f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
@@ -221,10 +243,9 @@ if check_config():
                 'abstract': abstract,
                 'arxiv_info': result_paper,
                 'arxiv_id': arxivId,
-                'insights': None,
                 'link': result_paper.entry_id,
                 'citationCount': doc[0].metadata['citationCount'],
-                'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
+                'type': doc[0].metadata['type']
             }
             response.append(inst)
             progress_bar.progress(int(100 * (idx+1) / len(result)),
@@ -234,7 +255,9 @@ if check_config():
             with list_view:
                 with st.container(border=True):
                     for idx, recommendation in enumerate(response):
-                        expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
+                        paper_type = f":red[{recommendation['type']}]" if recommendation['type'] == "citation" else f":blue[{recommendation['type']}]" if recommendation[
+                            'type'] == "cited paper" else f":green[{recommendation['type']}]"
+                        expander_title = f"{recommendation['title']} {paper_type} ({recommendation['score']}%)"
                         if recommendation['citationCount'] > 100:
                             expander_title = f"🧐 **{expander_title}**"
                         with st.expander(f"{idx}. "+expander_title):
@@ -242,7 +265,7 @@ if check_config():
 
 Score {recommendation['score']}
 
-Type {recommendation['type']}
+Type {paper_type}
 
 [Link]({recommendation['link']})
 
@@ -252,40 +275,59 @@ arxiv id: {recommendation['arxiv_id']}
 
 ## Abstract
 {recommendation['abstract']}
-## Insights
-{recommendation['insights']}
 
 ## Related papers
 {paper_relationship[recommendation['title']]}''')
             with dataframe_view:
-                st.dataframe(pd.DataFrame(response))
-        shutil.rmtree(f'./db/{db_name}')
-                        # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
-                        # TODO comment for a moment...
-                        # template=zot.zot.item_template('preprint')
-                        # template['title'] = recommendation['title']
-                        # template['abstractNote'] = recommendation['abstract']
-                        # authors=[]
-                        # for author in recommendation['arxiv_info'].authors:
-                        #     name = author.name.split()
-                        #     inst = {
-                        #         'creatorType': 'author',
-                        #         'firstName': name[0],
-                        #         'lastName': name[1]
-                        #     }
-                        #     authors.append(inst)
-                        # template['creators'] = authors
-                        # template['repository'] = 'arXiv'
-                        # template['archiveID'] = f'arXiv:{recommendation["arxiv_id"]}'
-                        # template['date'] = recommendation['arxiv_info'].published.strftime("%Y-%m-%d")
-                        # template['url'] = recommendation['link']
-                        # template['libraryCatalog'] = 'arXiv.org'
-                        # template['extra'] = f"{template['archiveID']} [{recommendation['arxiv_info'].primary_category.split('.')[0]}]"
-                        # template['collections'] = [key]
+                # st.dataframe(pd.DataFrame(response))
+                df = pd.DataFrame(response)
+                st.data_editor(
+                    df,
+                    column_config={
+                        "link": st.column_config.LinkColumn(
+                            "URL",
+                            max_chars=100,
+                            display_text="Open Link"
+                        ),
+                        "title": st.column_config.TextColumn(
+                            "title", max_chars=100
+                        ),
+                        "abstract": st.column_config.TextColumn(
+                            "abstract", max_chars=100
+                        ),
+                        "score": st.column_config.NumberColumn(
+                            "score", format="%f %%"
+                        ),
+                    },
+                )
 
-                        # if create:
-                        #     print('create!')
-                        #     print(template)
+        shutil.rmtree(f'./db/{db_name}')
+        # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
+        # TODO comment for a moment...
+        # template=zot.zot.item_template('preprint')
+        # template['title'] = recommendation['title']
+        # template['abstractNote'] = recommendation['abstract']
+        # authors=[]
+        # for author in recommendation['arxiv_info'].authors:
+        #     name = author.name.split()
+        #     inst = {
+        #         'creatorType': 'author',
+        #         'firstName': name[0],
+        #         'lastName': name[1]
+        #     }
+        #     authors.append(inst)
+        # template['creators'] = authors
+        # template['repository'] = 'arXiv'
+        # template['archiveID'] = f'arXiv:{recommendation["arxiv_id"]}'
+        # template['date'] = recommendation['arxiv_info'].published.strftime("%Y-%m-%d")
+        # template['url'] = recommendation['link']
+        # template['libraryCatalog'] = 'arXiv.org'
+        # template['extra'] = f"{template['archiveID']} [{recommendation['arxiv_info'].primary_category.split('.')[0]}]"
+        # template['collections'] = [key]
+
+        # if create:
+        #     print('create!')
+        #     print(template)
 #                             """title
 # creators
 # abstractNote
@@ -317,4 +359,5 @@ else:
 [More info about zotero configuration!](https://github.com/urschrei/pyzotero)
 ### 2. check for advanced search
 + `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
++ `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
 """)

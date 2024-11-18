@@ -202,7 +202,7 @@ def recommend_paper(paper_title: str):
     recommended_papers = []
     topic = set()
     for inst in data:
-        if inst['abstract'] is not None and inst['title'] not in topic:
+        if inst['abstract'] is not None and inst['title'] not in topic and inst['url'] is not None and inst['year'] is not None:
             cnt += 1
             topic.add(inst['title'])
             recommended_papers.append(
@@ -214,7 +214,7 @@ def recommend_paper(paper_title: str):
                         'year': inst['year'],
                         'url': inst['url'],
                         'citationCount': inst['citationCount'],
-                        'type': 'semantic scholar recommendation'},
+                        'type': 'S2ORC'},
                     id=cnt
                 )
             )

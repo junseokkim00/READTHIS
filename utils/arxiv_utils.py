@@ -24,7 +24,8 @@ def load_paper_from_rss(category: str):
                 metadata={
                     'title': title,
                     'year': feed['published_parsed'].tm_year,
-                    'url': feed['link']
+                    'url': feed['link'],
+                    'identifier': feed['link'].split('/')[-1],
                 },
                 id=cnt
             ))

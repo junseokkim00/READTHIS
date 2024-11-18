@@ -118,8 +118,8 @@ if category and check_config():
                     inst = {
                         'title': title,
                         'score': doc[1],
+                        'identifier': doc[0].metadata['identifier'],
                         'abstract': abstract,
-                        'identifier': None,
                         'link': doc[0].metadata['url'],
                         'type': "rss"
                     }
@@ -132,6 +132,8 @@ if category and check_config():
                             st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
+
+Identifier: {recommendation['identifier']}
 
 [Link]({recommendation['link']})
 ## Abstract
