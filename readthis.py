@@ -1,4 +1,5 @@
 import streamlit as st
+from PIL import Image
 
 st.set_page_config(
     page_title="Read This",
@@ -16,7 +17,8 @@ with st.sidebar:
         st.toast("✅ Openai api key ready!")
 
 st.write("# Read :red[This]! 👨‍🔬")
-st.image("READTHIS/assets/logo.png",width=500)
+logo = Image.open("assets/logo.png")
+st.image(logo,width=500)
 
 st.markdown(
     """
