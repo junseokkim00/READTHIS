@@ -16,19 +16,20 @@ with st.sidebar:
         st.session_state['openai_api_key'] = openai_api_key
         st.toast("✅ Openai api key ready!")
 
-st.write("# Read :red[This]! 👨‍🔬")
+st.write("# Read:red[This]! 👨‍🔬")
 logo = Image.open("assets/logo.png")
 st.image(logo,width=500)
+st.subheader("Read:red[This] is an open-source application for finding research paper like a pro")
 
 st.markdown(
     """
-    ReadThis is an open-source application for finding research paper like a pro
     We have several services for users.
     1. 📄 `What's Next?`: find the next paper based on your currently readings
     2. 📝 `Daily Papers`: find related papers based on your :red[Zotero] collection
     3. 🕵️‍♂️ `Paper Hunt`: find the latest paper from the latest arxiv :orange[rss feed]
     ### How to use this?
-    1. configure `openai_api_key` in the left sidebar by adding your `OPENAI_API_KEY`
+    0. Our service is :red[**free**] to use if you use `huggingface` as your embedding. (Other advanced search functions are also :red[**free**] as well, too!)
+    1. If you want to use `openai` embeddings, configure `openai_api_key` in the left sidebar by adding your `OPENAI_API_KEY`
         - we use text-embedding from openai, so it should not be a huge burden for the user.
     2. Specially for `Daily Papers` service, you need to connect your Zotero in order to use the service
     
