@@ -347,7 +347,11 @@ elif embed_name == 'openai':
 else:
     with st.container(border=True):
         st.markdown("""## How to use Daily paper?
-### 1. configure your setting
+#### 1. check for advanced search
++ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
++ `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
+
+#### 2. configure your setting
 + select embeddings
     + `openai`: Fast but require api_key
     + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
@@ -355,9 +359,7 @@ else:
     + `library_id`: enter your id for the access (user id for api calls)
     + `library_type`: `user` if you are accessing your own Zotero Library, or `group` if you are acessing the shared group library
     + `zotero_api_key`: api key for api calls of Zotero
-
 [More info about zotero configuration!](https://github.com/urschrei/pyzotero)
-### 2. check for advanced search
-+ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
-+ `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
-""")
+
+#### 3. select collection
+#### 4. enter prompt that you want to explore further.""")

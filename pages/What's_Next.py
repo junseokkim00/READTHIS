@@ -29,7 +29,7 @@ with st.sidebar:
     use_web_search = st.checkbox("use web search?", disabled=True)
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
-    sort_by_citations = st.checkbox("sort by citation number?")
+    # sort_by_citations = st.checkbox("sort by citation number?")
     embed_name = st.selectbox(
         "select embeddings",
         ("openai", "huggingface"),
@@ -60,6 +60,7 @@ query = st.chat_input("Enter the prompt")
 # settings
 judge_llm = False
 rewrite_query = False
+sort_by_citations = False
 
 
 def check_config():
@@ -338,15 +339,18 @@ elif embed_name == 'openai':
 else:
     with st.container(border=True):
         st.markdown("""## How to use What's Next?
-### 1. configure your setting
-+ select embeddings
-    + `openai`: Fast but require api_key
-    + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
-### 2. check for advanced search
+#### 1. check for advanced search
 + `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
 + `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
-+ `sort by citation search`: relies on citation count of the retrieved paper.
-    """)
+#### 2. select embeddings
++ `openai`: Fast but require api_key
++ `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
+#### 3. Enter the arxiv number of the paper you are currently reading.
++ find arxiv number from [here](https://www.arxiv.org/).
+#### 4. Enter the prompt that you want to explore in the future.
++ Examples
+    + `Types of Attention mechanism`
+    + `Using Attention mechanism in computer vision task`""")
 #     col1, col2 = st.columns(2)
 #     with col1:
 #         st.header('pdf')

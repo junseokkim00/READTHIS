@@ -163,9 +163,13 @@ Identifier: {recommendation['identifier']}
 else:
     with st.container(border=True):
         st.markdown("""## How to use Paper Hunt?
-### 1. configure your setting
-+ select category: categories denotation is presented [here](https://arxiv.org/category_taxonomy)
-+ select embeddings
-    + `openai`: Fast but require api_key
-    + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
+#### 1. Select embeddings
++ `openai`: Fast but require api_key
++ `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
+#### 2. Select category to fetch the latest RSS Feed
++ `select category`: categories denotation is presented [here](https://arxiv.org/category_taxonomy)
+#### 3. Enter prompt to describe the paper you want to find
++ examples
+    + `self-knowledge inside LLMs`
+    + `Diffusion models`
 """)
