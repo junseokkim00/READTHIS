@@ -35,5 +35,6 @@ st.markdown(
     ### Contact us
      + [Linkedin](https://www.linkedin.com/in/junseok-kim-b93373214/)
      + Contribution [Github repo](https://github.com/junseokkim00/READTHIS.git)
+     + Tell me your feedback [Google Form](https://forms.gle/6q771g8TMhK25Hhw5)
 """
 )
