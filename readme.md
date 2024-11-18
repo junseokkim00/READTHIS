@@ -4,21 +4,24 @@ A SAAS for recent paper recommendations based on AI conferences
 
 
 # Novelty
++ generate database based on academic paper links (citations and references)
 + advanced search for specific settings
-    + specific conference
-    + paper type (short/long)
-    + findings, main, workshop (seperated)
-    + more?
+    + fetching paper from Semantic Scholar Open research corpus
+    + use web search?
+    + rss feed search
 
-## How it works
+## Services
 
-TBA
+### What's Next? 📄
++ find next paper based on the paper you are currently reading
 
+### Daily Paper 📄
++ find relevant papers based on your collection of papers
++ connected with Zotero
 
-## Ablations
+### Paper Hunt 🕵️‍♂️
++ find the latest papers that sounds interesting in rss feed
 
-- [ ] What if we use both original query, and rewritten query for retrieval?
-- [ ] ETC
 
 ## How to use `readthis`?
 
@@ -33,22 +36,14 @@ $ pip install -r requirements.txt
 ```
 
 
-+ semantic scholar api로 reference 가져오기
-  + citations 가져오기
-
-
-
-### Architecture
-- `readthis.py`
-- `pages`
-  - `1_`
-
 
 
 ## TODO
 - [X] Connect not only reference papers, but also citation papers for the given query
-- [ ] Implement KNN for un-cited papers + citations
-- [ ] Zotero import export
+- [X] Zotero import
+- [X] RSS Feed connection
+- [ ] Web search functionality
+- [X] Dataframe exportation
 
 ## References
 [semantic scholar api example](https://github.com/allenai/s2-folks/tree/main/examples/python) : github link for using semantic scholar api
@@ -67,10 +62,4 @@ $ pip install -r requirements.txt
 
 [scholarly for python](https://github.com/scholarly-python-package/scholarly?tab=readme-ov-file)
 
-<details>
-<summary>Click to toggle contents of `code`</summary>
-
-```
-CODE!
-```
-</details>
+[S2ORC](https://github.com/allenai/s2orc)
