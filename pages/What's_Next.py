@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from st_link_analysis import st_link_analysis, NodeStyle, EdgeStyle
 import os
 import shutil
@@ -10,6 +11,7 @@ from utils.arxiv_utils import load_paper_arxiv_api, retrieve_paper
 from utils.web_utils import duckduckgoSearch
 import time
 from utils.category_list import category_map
+import json
 
 st.set_page_config(
     page_title="What's Next?",
@@ -22,9 +24,9 @@ st.subheader(
 
 
 with st.sidebar:
-    judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
-    rewrite_query = st.checkbox("rewrite query?", disabled=True)
-    use_web_search = st.checkbox("use web search?")
+    # judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
+    # rewrite_query = st.checkbox("rewrite query?", disabled=True)
+    use_web_search = st.checkbox("use web search?", disabled=True)
     sort_by_citations = st.checkbox("sort by citation number?")
     embed_name = st.selectbox(
         "select embeddings",
@@ -53,7 +55,9 @@ with st.sidebar:
 # main side
 arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
 query = st.chat_input("Enter the prompt")
-
+# settings
+judge_llm = False
+rewrite_query = False
 
 def check_config():
     if embed_name == "openai":
@@ -67,8 +71,8 @@ def check_config():
 if arxiv_number and query and check_config():
     with st.chat_message('user'):
         st.write(query)
-        st.write(
-            f"Config: judge_llm: `{judge_llm}` rewrite_query: `{rewrite_query}`")
+        # st.write(
+        #     f"Config: judge_llm: `{judge_llm}` rewrite_query: `{rewrite_query}`")
     with st.status(f"Searching paper of arxiv number {arxiv_number}...", expanded=True):
         metadata = load_paper_arxiv_api(arxiv_id=arxiv_number)
         # print(metadata.links)
@@ -207,10 +211,10 @@ if arxiv_number and query and check_config():
         else:
             inst = {
                 'title': title,
+                'score': doc[1],
                 'abstract': abstract,
                 'insights': None,
                 'link': doc[0].metadata['url'],
-                'score': doc[1],
                 'citationCount': doc[0].metadata['citationCount'],
                 'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == 'internet' else f":yellow[{doc[0].metadata['type']}]"
             }
@@ -219,15 +223,16 @@ if arxiv_number and query and check_config():
                               text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
 
     with st.chat_message('assistant'):
-        # list_view, graph_view = st.tabs(['list', 'graph'])
-        # with list_view:
-        with st.container(border=True):
-            for idx, recommendation in enumerate(response):
-                expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
-                if recommendation['citationCount'] > 100:
-                    expander_title = f"🧐 **{expander_title}**"
-                with st.expander(f"{idx}. "+expander_title):
-                    st.markdown(f'''# {recommendation['title']}
+        
+        list_view, dataframe_view = st.tabs(['list', 'dataframe'])
+        with list_view:
+            with st.container(border=True):
+                for idx, recommendation in enumerate(response):
+                    expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
+                    if recommendation['citationCount'] > 100:
+                        expander_title = f"🧐 **{expander_title}**"
+                    with st.expander(f"{idx}. "+expander_title):
+                        st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
 
@@ -241,7 +246,8 @@ Citation count: {recommendation['citationCount']}
 {recommendation['abstract']}
 ## Insights
 {recommendation['insights']}''')
-
+        with dataframe_view:
+            st.dataframe(pd.DataFrame(response))
         # with graph_view:
         #     st.write("let me show you")
         #     elements = {}
@@ -316,9 +322,9 @@ else:
 ### 1. configure your setting
 + select embeddings
     + `openai`: Fast but require api_key
-    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
+    + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
 ### 2. check for advanced search
-+ `use web search`: also retrieve relevant paper from duckduckgo search (currently not available)
++ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
 + `sort by citation search`: relies on citation count of the retrieved paper.
     """)
 #     col1, col2 = st.columns(2)

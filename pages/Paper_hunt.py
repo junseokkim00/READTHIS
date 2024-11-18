@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import os
 import shutil
 import feedparser
@@ -75,63 +76,67 @@ if category and check_config():
         st.error("Try to visit next time!")
     else:
         prompt = st.text_input("Describe the idea of a paper you want to find.")
-        with st.chat_message('user'):
-            st.write(prompt)
-        with st.status("setting up database for the latest paper..."):
-            # embeddings = get_embeddings(
-            #     api_key=st.session_state['openai_api_key']
-            # )
-            if embed_name == "openai":
-                embeddings = get_embeddings(
-                    api_key=st.session_state['openai_api_key']
+        if prompt:
+            with st.chat_message('user'):
+                st.write(prompt)
+            with st.status("setting up database for the latest paper..."):
+                # embeddings = get_embeddings(
+                #     api_key=st.session_state['openai_api_key']
+                # )
+                if embed_name == "openai":
+                    embeddings = get_embeddings(
+                        api_key=st.session_state['openai_api_key']
+                    )
+                else:
+                    embeddings = get_embeddings(
+                        name=embed_name
+                    )
+                today = date.today()
+                today = today.strftime("%Y-%m-%d")
+                db_name = f"{today}-{category}"
+                if os.path.isdir(f'./db/{db_name}'):
+                    shutil.rmtree(f'./db/{db_name}')
+                db = set_db(name=db_name,
+                            embeddings=embeddings,
+                            save_local=True)
+                db = add_documents(
+                    db=db,
+                    documents=feed_list
                 )
-            else:
-                embeddings = get_embeddings(
-                    name=embed_name
-                )
-            today = date.today()
-            today = today.strftime("%Y-%m-%d")
-            db_name = f"{today}-{category}"
-            if os.path.isdir(f'./db/{db_name}'):
-                shutil.rmtree(f'./db/{db_name}')
-            db = set_db(name=db_name,
-                        embeddings=embeddings,
-                        save_local=True)
-            db = add_documents(
-                db=db,
-                documents=feed_list
-            )
-        with st.status(f"Retrieving...", expanded=True):
-            try:
-                result = db.similarity_search_with_score(prompt, k=100)
-                result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
-            except:
-                st.error("DB does not have documents.")
+            with st.status(f"Retrieving...", expanded=True):
+                try:
+                    result = db.similarity_search_with_score(prompt, k=100)
+                    result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
+                except:
+                    st.error("DB does not have documents.")
 
-            response = []
-            for idx, doc in enumerate(result):
-                abstract, title = doc[0].page_content, doc[0].metadata['title']
-                inst = {
-                    'title': title,
-                    'abstract': abstract,
-                    'identifier': None,
-                    'link': doc[0].metadata['url'],
-                    'score': doc[1],
-                    'type': f":orange[rss]"
-                }
-                response.append(inst)
-
-        with st.container(border=True):
-            for idx, recommendation in enumerate(response):
-                with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']} {recommendation['score']} %"):
-                    st.markdown(f'''# {recommendation['title']}
+                response = []
+                for idx, doc in enumerate(result):
+                    abstract, title = doc[0].page_content, doc[0].metadata['title']
+                    inst = {
+                        'title': title,
+                        'score': doc[1],
+                        'abstract': abstract,
+                        'identifier': None,
+                        'link': doc[0].metadata['url'],
+                        'type': f":orange[rss]"
+                    }
+                    response.append(inst)
+            list_view, dataframe_view = st.tabs(['list', 'dataframe'])
+            with list_view:
+                with st.container(border=True):
+                    for idx, recommendation in enumerate(response):
+                        with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']} {recommendation['score']} %"):
+                            st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
 
 [Link]({recommendation['link']})
 ## Abstract
 {recommendation['abstract']}''')
-        shutil.rmtree(f'./db/{db_name}')
+            with dataframe_view:
+                st.dataframe(pd.DataFrame(response))
+            shutil.rmtree(f'./db/{db_name}')
 else:
     with st.container(border=True):
         st.markdown("""## How to use Paper Hunt?
@@ -139,6 +144,6 @@ else:
 + select category: categories denotation is presented [here](https://arxiv.org/category_taxonomy)
 + select embeddings
     + `openai`: Fast but require api_key
-    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
+    + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
 """)
         

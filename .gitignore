@@ -7,3 +7,5 @@ archive
 arxiv
 .DS_Store
 collections
+test_graph.py
+Describe_it.py

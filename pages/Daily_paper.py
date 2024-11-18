@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import os
 from utils.zotero_utils import Zotero
 from utils.arxiv_utils import load_paper_arxiv_title
@@ -23,7 +24,7 @@ st.subheader(
 
 
 with st.sidebar:
-    use_web_search = st.checkbox("use web search?")
+    use_web_search = st.checkbox("use web search?", disabled=True)
     embed_name = st.selectbox(
         "select embeddings",
         ("openai", "huggingface"),
@@ -216,26 +217,28 @@ if check_config():
                 arxivId = arxivId.split('v')[0]
             inst = {
                 'title': title,
+                'score': doc[1],
                 'abstract': abstract,
                 'arxiv_info': result_paper,
                 'arxiv_id': arxivId,
                 'insights': None,
                 'link': result_paper.entry_id,
                 'citationCount': doc[0].metadata['citationCount'],
-                'score': doc[1],
                 'type': f":red[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "citation" else f":blue[{doc[0].metadata['type']}]" if doc[0].metadata['type'] == "cited paper" else f":green[{doc[0].metadata['type']}]"
             }
             response.append(inst)
             progress_bar.progress(int(100 * (idx+1) / len(result)),
                                   text=f"Filtering documents from retrieved documents ({idx+1} / {len(result)})")
         with st.chat_message('assistant'):
-            with st.container(border=True):
-                for idx, recommendation in enumerate(response):
-                    expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
-                    if recommendation['citationCount'] > 100:
-                        expander_title = f"🧐 **{expander_title}**"
-                    with st.expander(f"{idx}. "+expander_title):
-                        st.markdown(f'''# {recommendation['title']}
+            list_view, dataframe_view = st.tabs(['list', 'dataframe'])
+            with list_view:
+                with st.container(border=True):
+                    for idx, recommendation in enumerate(response):
+                        expander_title = f"{recommendation['title']} {recommendation['type']} {recommendation['score']}%"
+                        if recommendation['citationCount'] > 100:
+                            expander_title = f"🧐 **{expander_title}**"
+                        with st.expander(f"{idx}. "+expander_title):
+                            st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
 
@@ -254,6 +257,8 @@ arxiv id: {recommendation['arxiv_id']}
 
 ## Related papers
 {paper_relationship[recommendation['title']]}''')
+            with dataframe_view:
+                st.dataframe(pd.DataFrame(response))
         shutil.rmtree(f'./db/{db_name}')
                         # create = st.button(f"add to {collection_select}", key=recommendation['arxiv_id'])
                         # TODO comment for a moment...
@@ -303,7 +308,7 @@ else:
 ### 1. configure your setting
 + select embeddings
     + `openai`: Fast but require api_key
-    + `huggingface`: slower but free! (we use `bge-small-en` embeddings)
+    + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
 + configure Zotero
     + `library_id`: enter your id for the access (user id for api calls)
     + `library_type`: `user` if you are accessing your own Zotero Library, or `group` if you are acessing the shared group library
@@ -311,5 +316,5 @@ else:
 
 [More info about zotero configuration!](https://github.com/urschrei/pyzotero)
 ### 2. check for advanced search
-+ `use web search`: also retrieve relevant paper from duckduckgo search (currently not available)
++ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
 """)

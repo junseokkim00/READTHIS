@@ -26,8 +26,7 @@ st.markdown(
     We have several services for users.
     1. 📄 `What's Next?`: find the next paper based on your currently readings
     2. 📝 `Daily Papers`: find related papers based on your :red[Zotero] collection
-    3. `Describe it`: find papers based on the internet
-    4. 🕵️‍♂️ `Paper Hunt`: find the latest paper from the latest arxiv :orange[rss feed]
+    3. 🕵️‍♂️ `Paper Hunt`: find the latest paper from the latest arxiv :orange[rss feed]
     ### How to use this?
     1. configure `openai_api_key` in the left sidebar by adding your `OPENAI_API_KEY`
         - we use text-embedding from openai, so it should not be a huge burden for the user.
