@@ -173,3 +173,7 @@ else:
     + `self-knowledge inside LLMs`
     + `Diffusion models`
 """)
+        st.markdown("## Video Tutorial")
+        video_file = open("assets/paper_hunt.mp4", "rb")
+        video_bytes = video_file.read()
+        st.video(video_bytes)

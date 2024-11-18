@@ -363,3 +363,7 @@ else:
 
 #### 3. select collection
 #### 4. enter prompt that you want to explore further.""")
+        st.markdown("## Video Tutorial")
+        video_file = open("assets/Daily_paper.mp4", "rb")
+        video_bytes = video_file.read()
+        st.video(video_bytes)

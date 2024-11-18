@@ -351,6 +351,10 @@ else:
 + Examples
     + `Types of Attention mechanism`
     + `Using Attention mechanism in computer vision task`""")
+        st.markdown("## Video Tutorial")
+        video_file = open("assets/whats_next.mp4", "rb")
+        video_bytes = video_file.read()
+        st.video(video_bytes)
 #     col1, col2 = st.columns(2)
 #     with col1:
 #         st.header('pdf')
