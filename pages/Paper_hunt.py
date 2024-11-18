@@ -60,12 +60,13 @@ def check_config():
     else:
         return False
 
+
 category = st.selectbox(
-        "select category for new arxiv papers",
-        (key for key in category_map),
-        index=None,
-        placeholder="select category"
-    )
+    "select category for new arxiv papers",
+    (key for key in category_map),
+    index=None,
+    placeholder="select category"
+)
 
 if category and check_config():
     with st.status(f"Fetching the latest rss feed", expanded=True):
@@ -75,7 +76,8 @@ if category and check_config():
     if len(feed_list) == 0:
         st.error("Try to visit next time!")
     else:
-        prompt = st.text_input("Describe the idea of a paper you want to find.")
+        prompt = st.text_input(
+            "Describe the idea of a paper you want to find.")
         if prompt:
             with st.chat_message('user'):
                 st.write(prompt)
@@ -119,14 +121,14 @@ if category and check_config():
                         'abstract': abstract,
                         'identifier': None,
                         'link': doc[0].metadata['url'],
-                        'type': f":orange[rss]"
+                        'type': "rss"
                     }
                     response.append(inst)
             list_view, dataframe_view = st.tabs(['list', 'dataframe'])
             with list_view:
                 with st.container(border=True):
                     for idx, recommendation in enumerate(response):
-                        with st.expander(f"{idx}. {recommendation['title']} {recommendation['type']} {recommendation['score']} %"):
+                        with st.expander(f"{idx}. {recommendation['title']} :orange[{recommendation['type']}] ({recommendation['score']}%) "):
                             st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
@@ -135,7 +137,26 @@ Score {recommendation['score']}
 ## Abstract
 {recommendation['abstract']}''')
             with dataframe_view:
-                st.dataframe(pd.DataFrame(response))
+                df = pd.DataFrame(response)
+                st.data_editor(
+                    df,
+                    column_config={
+                        "link": st.column_config.LinkColumn(
+                            "URL",
+                            max_chars=100,
+                            display_text="Open Link"
+                        ),
+                        "title": st.column_config.TextColumn(
+                            "title", max_chars=100
+                        ),
+                        "abstract": st.column_config.TextColumn(
+                            "abstract", max_chars=100
+                        ),
+                        "score": st.column_config.NumberColumn(
+                            "score", format="%f %%"
+                        ),
+                    },
+                )
             shutil.rmtree(f'./db/{db_name}')
 else:
     with st.container(border=True):
@@ -146,4 +167,3 @@ else:
     + `openai`: Fast but require api_key
     + `huggingface`: slower but free! (we use [`bge-small-en`](https://huggingface.co/BAAI/bge-small-en) embeddings)
 """)
-        
