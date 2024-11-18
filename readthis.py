@@ -16,7 +16,7 @@ with st.sidebar:
         st.toast("✅ Openai api key ready!")
 
 st.write("# Read :red[This]! 👨‍🔬")
-st.image("./assets/logo.png",width=500)
+st.image("READTHIS/assets/logo.png",width=500)
 
 st.markdown(
     """
