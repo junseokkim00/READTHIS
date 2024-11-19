@@ -7,14 +7,14 @@ st.set_page_config(
     layout="wide"
 )
 
-with st.sidebar:
-    openai_api_key = st.text_input("OpenAI api key", type="password")
-    st.markdown(
-            "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
-    save_configuration = st.button("Save configuration")
-    if save_configuration and openai_api_key != "":
-        st.session_state['openai_api_key'] = openai_api_key
-        st.toast("✅ Openai api key ready!")
+# with st.sidebar:
+#     openai_api_key = st.text_input("OpenAI api key", type="password")
+#     st.markdown(
+#             "[Learn more about OpenAI API](https://platform.openai.com/api-keys)")
+#     save_configuration = st.button("Save configuration")
+#     if save_configuration and openai_api_key != "":
+#         st.session_state['openai_api_key'] = openai_api_key
+#         st.toast("✅ Openai api key ready!")
 
 st.write("# Read:red[This]! 👨‍🔬")
 logo = Image.open("assets/logo.png")
