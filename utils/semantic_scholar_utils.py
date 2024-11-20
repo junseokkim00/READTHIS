@@ -102,9 +102,11 @@ def get_cited_papers(arxiv_id: str):
     influential_papers = []
     paperId = set()
     cnt = 0
+    citationCnt = 0
     for inst in response_data['data']:
         # if inst['isInfluential'] and inst['citingPaper']['abstract'] is not None and inst['citingPaper']['paperId'] not in paperId:
         if inst['citingPaper']['abstract'] is not None and inst['citingPaper']['title'] not in paperId and inst['citingPaper']['url'] is not None and inst['citingPaper']['year'] is not None:
+            citationCnt+=inst['citingPaper']['citationCount']
             cnt += 1
             paperId.add(inst['citingPaper']['paperId'])
             influential_papers.append(Document(
@@ -118,6 +120,7 @@ def get_cited_papers(arxiv_id: str):
                 id=cnt
             ))
             # TODO should Document id be unique?
+    print(citationCnt)
     return influential_papers, cnt
 
 

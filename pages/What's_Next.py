@@ -139,9 +139,10 @@ if arxiv_number and query and check_config():
                     db=db,
                     documents=searchOutput
                 )
-        if len(recommendation) > 0:
-            db = add_documents(db=db,
-                               documents=recommendation)
+        if fetch_from_s2orc:
+            if len(recommendation) > 0:
+                db = add_documents(db=db,
+                                documents=recommendation)
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
