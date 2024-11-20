@@ -15,31 +15,34 @@ def duckduckgoSearch(query: str, max_results=100):
     - query: query for the browser
     - max_results: number of result
     """
-    wrapper = DuckDuckGoSearchAPIWrapper()
-    output = wrapper.results(query=query, max_results=max_results)
-    print(len(output))
-    arxivSet=set()
-    result=[]
-    idx=0
-    for inst in output:
-        if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
-            arxivId = inst['link'].split('/')[-1]
-            if 'v' in arxivId:
-                arxivId = arxivId.split('v')[0]
-            if arxivId not in arxivSet:
-                arxivSet.add(arxivId)
-                paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
-                document = Document(
-                    page_content=paper_info.summary,
-                    metadata={'title': paper_info.title,
-                              'year': paper_info.published.strftime("%Y"),
-                              'url':paper_info.entry_id,
-                              'type': "internet"},
-                    id=idx
-                )
-                result.append(document)
-                idx+=1
-    return result
+    try:
+        wrapper = DuckDuckGoSearchAPIWrapper()
+        output = wrapper.results(query=query, max_results=max_results)
+        print(len(output))
+        arxivSet=set()
+        result=[]
+        idx=0
+        for inst in output:
+            if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
+                arxivId = inst['link'].split('/')[-1]
+                if 'v' in arxivId:
+                    arxivId = arxivId.split('v')[0]
+                if arxivId not in arxivSet:
+                    arxivSet.add(arxivId)
+                    paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
+                    document = Document(
+                        page_content=paper_info.summary,
+                        metadata={'title': paper_info.title,
+                                'year': paper_info.published.strftime("%Y"),
+                                'url':paper_info.entry_id,
+                                'type': "internet"},
+                        id=idx
+                    )
+                    result.append(document)
+                    idx+=1
+        return result
+    except:
+        return None
             
 def quickSearch(query: str, max_results=100):
     """
