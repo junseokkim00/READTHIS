@@ -43,10 +43,13 @@ def load_paper_arxiv_api(arxiv_id: str):
 
 
 def load_paper_arxiv_title(paper_name: str):
-    client = arxiv.Client()
-    search_by_query = arxiv.Search(query=paper_name, max_results=1)
-    result = next(client.results(search_by_query))
-    return result
+    try:
+        client = arxiv.Client()
+        search_by_query = arxiv.Search(query=paper_name, max_results=1)
+        result = next(client.results(search_by_query))
+        return result
+    except:
+        return None
 
 
 def retrieve_paper(category_list: list):

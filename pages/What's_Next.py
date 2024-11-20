@@ -4,7 +4,7 @@ from st_link_analysis import st_link_analysis, NodeStyle, EdgeStyle
 import os
 import shutil
 from utils.db_utils import set_db, get_embeddings, add_documents
-from utils.semantic_scholar_utils import get_cited_papers, recommend_paper, get_citations
+from utils.semantic_scholar_utils import get_cited_papers, recommend_paper, get_citations, convert_to_paper_id
 from utils.LLM_utils import set_model, query_rewrite, judge_paper
 from langchain_community.document_loaders import ArxivLoader
 from utils.arxiv_utils import load_paper_arxiv_api, retrieve_paper
@@ -56,14 +56,6 @@ with st.sidebar:
             st.error("OpenAI_api_key is not configured!", icon='🚨')
 
 # main side
-arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
-query = st.chat_input("Enter the prompt")
-# settings
-judge_llm = False
-rewrite_query = False
-sort_by_citations = False
-
-
 def check_config():
     if embed_name == "openai":
         return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
@@ -72,19 +64,48 @@ def check_config():
     else:
         return False
 
+judge_llm = False
+rewrite_query = False
+sort_by_citations = False
 
-if arxiv_number and query and check_config():
+tab1, tab2 = st.tabs(['find by Arxiv id', 'find by title of the paper'])
+
+with tab1:
+    use_arxiv_id=True
+    arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
+    
+with tab2:
+    use_arxiv_id=False
+    paper_title = st.text_input("Enter the title of the paper (e.g. Attention is all you need.)")
+query = st.chat_input("Enter the prompt")
+# settings
+
+def paper_info_check():
+    if use_arxiv_id:
+        return arxiv_number
+    else:
+        return paper_title
+
+
+
+
+if paper_info_check() and query and check_config():
     with st.chat_message('user'):
         st.write(query)
-        # st.write(
-        #     f"Config: judge_llm: `{judge_llm}` rewrite_query: `{rewrite_query}`")
-    with st.status(f"Searching paper of arxiv number {arxiv_number}...", expanded=True):
-        metadata = load_paper_arxiv_api(arxiv_id=arxiv_number)
-        # print(metadata.links)
-        title = metadata.title
-        categories = metadata.categories
-        st.write(f"Title: `{title}`")
-        st.write(f"Categories: `{categories}`")
+    if use_arxiv_id:
+        with st.status(f"Searching paper of arxiv number {arxiv_number}...", expanded=True):
+            metadata = load_paper_arxiv_api(arxiv_id=arxiv_number)
+            # print(metadata.links)
+            paper_title = metadata.title
+            categories = metadata.categories
+            st.write(f"Title: `{paper_title}`")
+            st.write(f"Categories: `{categories}`")
+    else:
+        with st.status(f"Searching paper id with the title of {paper_title}..", expanded=True):
+            paper_id = convert_to_paper_id(paper_title=paper_title)
+            st.write(f"paperId: `{paper_id}`")
+            arxiv_number = paper_id
+        
     with st.status(f"retrieving cited paper...", expanded=True):
         time.sleep(1)
         # embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
@@ -101,20 +122,21 @@ if arxiv_number and query and check_config():
         db = set_db(name=arxiv_number,
                     embeddings=embeddings,
                     save_local=True)
-        documents, cnt = get_cited_papers(arxiv_number)
+            
+        documents, cnt = get_cited_papers(arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cnt}] papers highly related to the given paper.")
 
     with st.status(f"retrieving citations...", expanded=True):
         time.sleep(2.05)
-        citations, cite_cnt = get_citations(arxiv_number)
+        citations, cite_cnt = get_citations(arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
     if fetch_from_s2orc:
         with st.status(f"retrieving recommendation from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
             time.sleep(2.05)
-            recommendation, recommendation_cnt = recommend_paper(paper_title=title)
+            recommendation, recommendation_cnt = recommend_paper(paper_title=paper_title)
             st.write(
                 f"There is :red[{recommendation_cnt}] papers in Semantic Scholar Open Research Corpus.")
     

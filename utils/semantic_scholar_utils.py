@@ -68,9 +68,12 @@ def search_query(query: str):
     # TODO search paper
 
 
-def get_citations(arxiv_id: str):
+def get_citations(arxiv_id: str, use_arxiv_id=True):
     load_dotenv(find_dotenv())
-    references = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/references"
+    if use_arxiv_id:
+        references = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/references"
+    else:
+        references = academic_graph_url + f"/paper/{arxiv_id}/references"
     params = {'limit': 1000,
               'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
@@ -105,9 +108,12 @@ def get_citations(arxiv_id: str):
     return influential_papers, cnt
 
 
-def get_cited_papers(arxiv_id: str):
+def get_cited_papers(arxiv_id: str, use_arxiv_id=True):
     load_dotenv(find_dotenv())
-    citations = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/citations"
+    if use_arxiv_id:
+        citations = academic_graph_url + f"/paper/ARXIV:{arxiv_id}/citations"
+    else:
+        citations = academic_graph_url + f"/paper/{arxiv_id}/citations"
     params = {'limit': 1000,
               'fields': 'title,abstract,year,isInfluential,url,citationCount'}
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")

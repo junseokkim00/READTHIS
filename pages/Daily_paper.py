@@ -186,7 +186,7 @@ if check_config():
                             total_paper_db.append(doc)
                             total_cnt += 1
                 st.write(
-                    f"You got {total_cnt} papers via browsing the internet.")
+                    f"You got :red[{total_cnt}] papers via browsing the internet.")
         if fetch_from_s2orc:
             with st.status(f"retrieving papers from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
                 total_cnt = 0
@@ -240,16 +240,18 @@ if check_config():
             print(doc[0].metadata)
             abstract, title = doc[0].page_content, doc[0].metadata['title']
             result_paper = load_paper_arxiv_title(paper_name=title)
-            arxivId = result_paper.entry_id.split('/')[-1]
-            if 'v' in arxivId:
-                arxivId = arxivId.split('v')[0]
+            if result_paper is None:
+                arxivId = None
+            else:
+                arxivId = result_paper.entry_id.split('/')[-1]
+                if 'v' in arxivId:
+                    arxivId = arxivId.split('v')[0]
             inst = {
                 'title': title,
                 'score': doc[1],
                 'abstract': abstract,
-                'arxiv_info': result_paper,
                 'arxiv_id': arxivId,
-                'link': result_paper.entry_id,
+                'link': doc[0].metadata['url'],
                 'citationCount': doc[0].metadata['citationCount'],
                 'type': doc[0].metadata['type']
             }
