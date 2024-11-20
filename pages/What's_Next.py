@@ -28,7 +28,19 @@ with st.sidebar:
     # rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_web_search = st.checkbox("use web search?")
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
-    top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
+    # use_arxiv_id = st.checkbox("use arxiv id")
+    use_arxiv_id = st.radio("choose paper submit type",
+                               ['arxiv id', 'paper title'],
+                               captions=['if the paper exists in arxiv, use this.',
+                                        "if you know the title of the paper, use this."],
+                               index=None
+                               )
+    if use_arxiv_id == "arxiv id":
+        use_arxiv_id = True
+    else:
+        use_arxiv_id = False
+    top_k = st.number_input(
+        "top k", value=10, min_value=1, max_value=100, step=1)
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     # sort_by_citations = st.checkbox("sort by citation number?")
     embed_name = st.selectbox(
@@ -56,6 +68,8 @@ with st.sidebar:
             st.error("OpenAI_api_key is not configured!", icon='🚨')
 
 # main side
+
+
 def check_config():
     if embed_name == "openai":
         return 'openai_api_key' in st.session_state and st.session_state['openai_api_key'] != ""
@@ -64,29 +78,27 @@ def check_config():
     else:
         return False
 
+
 judge_llm = False
 rewrite_query = False
 sort_by_citations = False
 
-tab1, tab2 = st.tabs(['find by Arxiv id', 'find by title of the paper'])
+# tab1, tab2 = st.tabs(['find by Arxiv id', 'find by title of the paper'])
 
-with tab1:
-    use_arxiv_id=True
+if use_arxiv_id:
     arxiv_number = st.text_input("Enter arxiv number (e.g. 1706.03762)")
-    
-with tab2:
-    use_arxiv_id=False
-    paper_title = st.text_input("Enter the title of the paper (e.g. Attention is all you need.)")
+else:
+    paper_title = st.text_input(
+        "Enter the title of the paper (e.g. Attention is all you need.)")
 query = st.chat_input("Enter the prompt")
 # settings
+
 
 def paper_info_check():
     if use_arxiv_id:
         return arxiv_number
     else:
         return paper_title
-
-
 
 
 if paper_info_check() and query and check_config():
@@ -104,7 +116,7 @@ if paper_info_check() and query and check_config():
             paper_id = convert_to_paper_id(paper_title=paper_title)
             st.write(f"paperId: `{paper_id}`")
             arxiv_number = paper_id
-        
+
     with st.status(f"retrieving cited paper...", expanded=True):
         time.sleep(1)
         # embeddings = get_embeddings(api_key=st.session_state['openai_api_key'])
@@ -121,24 +133,27 @@ if paper_info_check() and query and check_config():
         db = set_db(name=arxiv_number,
                     embeddings=embeddings,
                     save_local=True)
-            
-        documents, cnt = get_cited_papers(arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
+
+        documents, cnt = get_cited_papers(
+            arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cnt}] papers highly related to the given paper.")
 
     with st.status(f"retrieving citations...", expanded=True):
         time.sleep(2.05)
-        citations, cite_cnt = get_citations(arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
+        citations, cite_cnt = get_citations(
+            arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
     if fetch_from_s2orc:
         with st.status(f"retrieving recommendation from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
             time.sleep(2.05)
-            recommendation, recommendation_cnt = recommend_paper(paper_title=paper_title)
+            recommendation, recommendation_cnt = recommend_paper(
+                paper_title=paper_title)
             st.write(
                 f"There is :red[{recommendation_cnt}] papers in Semantic Scholar Open Research Corpus.")
-    
+
     if use_web_search:
         with st.status(f"retrieving from the internet...", expanded=True):
             time.sleep(2.05)
@@ -146,7 +161,7 @@ if paper_info_check() and query and check_config():
             searchOutput = tavilySearch(query=query)
             if searchOutput is None:
                 st.write("web search not working due to api limitation")
-                searchOutput=[]
+                searchOutput = []
             st.write(
                 f"There is :red[{len(searchOutput)}] papers searched from the internet."
             )
@@ -168,7 +183,7 @@ if paper_info_check() and query and check_config():
         if fetch_from_s2orc:
             if len(recommendation) > 0:
                 db = add_documents(db=db,
-                                documents=recommendation)
+                                   documents=recommendation)
 
     # REWRITE PROMPT
     llm = set_model(name="llama3-8b-8192")
@@ -184,7 +199,7 @@ if paper_info_check() and query and check_config():
     with st.status(f"Retrieving...", expanded=True):
         try:
             result = db.similarity_search_with_score(rewrite_query, k=top_k)
-            result = [(r[0], round((1-r[1]) * 100, 2))for r in result] 
+            result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
         except Exception as e:
             print(e)
             st.error("DB does not have documents.")
@@ -237,7 +252,8 @@ if paper_info_check() and query and check_config():
         with list_view:
             with st.container(border=True):
                 for idx, recommendation in enumerate(response):
-                    paper_type = f":red[{recommendation['type']}]" if recommendation['type'] == "citation" else f":blue[{recommendation['type']}]" if recommendation['type'] == "cited paper" else f":green[{recommendation['type']}]" if recommendation['type'] == 'internet' else f":violet[{recommendation['type']}]"
+                    paper_type = f":red[{recommendation['type']}]" if recommendation['type'] == "citation" else f":blue[{recommendation['type']}]" if recommendation[
+                        'type'] == "cited paper" else f":green[{recommendation['type']}]" if recommendation['type'] == 'internet' else f":violet[{recommendation['type']}]"
                     expander_title = f"{recommendation['title']} {paper_type} ({recommendation['score']}%)"
                     if recommendation['citationCount'] > 100:
                         expander_title = f"🧐 **{expander_title}**"
