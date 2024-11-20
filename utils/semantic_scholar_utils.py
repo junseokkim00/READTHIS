@@ -12,11 +12,11 @@ def search_paper_batch(id_list):
     load_dotenv(find_dotenv())
     api_key = os.getenv('SEMANTIC_SCHOLAR_API_KEY')
     query_batch = academic_graph_url + "/paper/batch"
-    query_params = {'fields': 'title,abstract,authors,year,url,citationStyles'}
+    query_params = {'fields': 'title,abstract,authors,year,url,citationStyles,citationCount'}
     headers = {'x-api-key': api_key}
     response = requests.post(
         query_batch,
-        parms=query_params,
+        params=query_params,
         headers=headers,
         json={"ids": arxiv_id_list}
     )
