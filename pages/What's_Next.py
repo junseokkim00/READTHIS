@@ -95,7 +95,6 @@ if paper_info_check() and query and check_config():
     if use_arxiv_id:
         with st.status(f"Searching paper of arxiv number {arxiv_number}...", expanded=True):
             metadata = load_paper_arxiv_api(arxiv_id=arxiv_number)
-            # print(metadata.links)
             paper_title = metadata.title
             categories = metadata.categories
             st.write(f"Title: `{paper_title}`")
