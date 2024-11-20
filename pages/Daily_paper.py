@@ -24,7 +24,7 @@ st.subheader(
 
 
 with st.sidebar:
-    use_web_search = st.checkbox("use web search?", disabled=True)
+    use_web_search = st.checkbox("use web search?")
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     embed_name = st.selectbox(
@@ -174,13 +174,16 @@ if check_config():
             with st.status(f"retrieving from the internet...", expanded=True):
                 total_cnt = 0
                 searchOutput = duckduckgoSearch(query=prompt)
-                for doc in searchOutput:
-                    if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
-                        title_set.add(doc.metadata['title'])
-                        total_paper_db.append(doc)
-                        total_cnt += 1
-                st.write(
-                    f"You got {total_cnt} papers via browsing the internet.")
+                if searchOutput is None:
+                    st.write("web search not working due to api limitation")
+                else:
+                    for doc in searchOutput:
+                        if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
+                            title_set.add(doc.metadata['title'])
+                            total_paper_db.append(doc)
+                            total_cnt += 1
+                    st.write(
+                        f"You got {total_cnt} papers via browsing the internet.")
         if fetch_from_s2orc:
             with st.status(f"retrieving papers from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
                 total_cnt = 0
@@ -348,7 +351,7 @@ else:
     with st.container(border=True):
         st.markdown("""## How to use Daily paper?
 #### 1. check for advanced search
-+ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
++ `use web search`: also retrieve relevant paper from duckduckgo search (:red[limited by api rate limit])
 + `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
 
 #### 2. configure your setting

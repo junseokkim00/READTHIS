@@ -26,7 +26,7 @@ st.subheader(
 with st.sidebar:
     # judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     # rewrite_query = st.checkbox("rewrite query?", disabled=True)
-    use_web_search = st.checkbox("use web search?", disabled=True)
+    use_web_search = st.checkbox("use web search?")
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     # sort_by_citations = st.checkbox("sort by citation number?")
@@ -121,6 +121,8 @@ if arxiv_number and query and check_config():
         with st.status(f"retrieving from the internet...", expanded=True):
             time.sleep(2.05)
             searchOutput = duckduckgoSearch(query=query)
+            if searchOutput is None:
+                st.write("web search not working due to api limitation")
             st.write(
                 f"There is :red[{len(searchOutput)}] papers searched from the internet."
             )
@@ -341,7 +343,7 @@ else:
     with st.container(border=True):
         st.markdown("""## How to use What's Next?
 #### 1. check for advanced search
-+ `use web search`: also retrieve relevant paper from duckduckgo search (:red[currently not available])
++ `use web search`: also retrieve relevant paper from duckduckgo search (:red[limited by api rate limit])
 + `fetch from S2ORC`: fetching relevant papers from Semantic Scholar's Open Research Corpus ([More info here](https://github.com/allenai/s2orc))
 #### 2. select embeddings
 + `openai`: Fast but require api_key
