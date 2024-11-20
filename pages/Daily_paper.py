@@ -26,6 +26,7 @@ st.subheader(
 with st.sidebar:
     use_web_search = st.checkbox("use web search?")
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+    top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     embed_name = st.selectbox(
         "select embeddings",
@@ -228,7 +229,7 @@ if check_config():
                 documents=total_paper_db
             )
         with st.status("Retrieving...", expanded=True):
-            result = db.similarity_search_with_score(prompt, k=10)
+            result = db.similarity_search_with_score(prompt, k=top_k)
             result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
             for res in result:
                 print(res[0].metadata['title'])

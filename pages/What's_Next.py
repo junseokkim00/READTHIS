@@ -28,6 +28,7 @@ with st.sidebar:
     # rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_web_search = st.checkbox("use web search?")
     fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+    top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
     st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
     # sort_by_citations = st.checkbox("sort by citation number?")
     embed_name = st.selectbox(
@@ -161,26 +162,8 @@ if arxiv_number and query and check_config():
     # RETRIEVE
     with st.status(f"Retrieving...", expanded=True):
         try:
-            result = db.similarity_search_with_score(rewrite_query, k=20)
-            result = [(r[0], round((1-r[1]) * 100, 2))for r in result]
-            # print(result)
-            if sort_by_citations:
-                result_cite_num = []
-                for res in result:
-                    #  = res[0].metadata['paperId']
-                    # num=0
-                    # res[0].metadata['citations'] = num
-                    num = res[0].metadata['citationCount']
-                    print(num)
-                    result_cite_num.append((res, num))
-                result_cite_num.sort(key=lambda x: -x[1])
-
-                if len(result_cite_num) >= 10:
-                    result = [t[0] for t in result_cite_num[:10]]
-                else:
-                    result = [t[0] for t in result_cite_num]
-            else:
-                result = result[:10] if len(result) >= 10 else result
+            result = db.similarity_search_with_score(rewrite_query, k=top_k)
+            result = [(r[0], round((1-r[1]) * 100, 2))for r in result] 
         except Exception as e:
             print(e)
             st.error("DB does not have documents.")
