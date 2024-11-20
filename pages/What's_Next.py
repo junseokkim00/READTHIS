@@ -8,7 +8,7 @@ from utils.semantic_scholar_utils import get_cited_papers, recommend_paper, get_
 from utils.LLM_utils import set_model, query_rewrite, judge_paper
 from langchain_community.document_loaders import ArxivLoader
 from utils.arxiv_utils import load_paper_arxiv_api, retrieve_paper
-from utils.web_utils import duckduckgoSearch
+from utils.web_utils import duckduckgoSearch, tavilySearch
 import time
 from utils.category_list import category_map
 import json
@@ -120,7 +120,8 @@ if arxiv_number and query and check_config():
     if use_web_search:
         with st.status(f"retrieving from the internet...", expanded=True):
             time.sleep(2.05)
-            searchOutput = duckduckgoSearch(query=query)
+            # searchOutput = duckduckgoSearch(query=query)
+            searchOutput = tavilySearch(query=query)
             if searchOutput is None:
                 st.write("web search not working due to api limitation")
                 searchOutput=[]

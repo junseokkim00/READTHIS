@@ -5,7 +5,7 @@ from utils.zotero_utils import Zotero
 from utils.arxiv_utils import load_paper_arxiv_title
 from utils.semantic_scholar_utils import get_cited_papers, get_citations, recommend_paper
 from utils.db_utils import set_db, get_embeddings, add_documents
-from utils.web_utils import duckduckgoSearch
+from utils.web_utils import duckduckgoSearch, tavilySearch
 from collections import defaultdict
 import time
 import shutil
@@ -173,7 +173,8 @@ if check_config():
         if use_web_search:
             with st.status(f"retrieving from the internet...", expanded=True):
                 total_cnt = 0
-                searchOutput = duckduckgoSearch(query=prompt)
+                # searchOutput = duckduckgoSearch(query=prompt)
+                searchOutput = tavilySearch(query=prompt)
                 if searchOutput is None:
                     st.write("web search not working due to api limitation")
                     searchOutput=[]
