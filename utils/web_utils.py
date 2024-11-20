@@ -6,6 +6,7 @@ from uuid import uuid4
 from langchain_core.documents import Document
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from utils.arxiv_utils import load_paper_arxiv_api
+from utils.semantic_scholar_utils import search_paper_batch
 
 
 def duckduckgoSearch(query: str, max_results=100):
@@ -22,6 +23,24 @@ def duckduckgoSearch(query: str, max_results=100):
         arxivSet=set()
         result=[]
         idx=0
+        # for inst in output:
+        #     if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
+        #         arxivId = inst['link'].split('/')[-1]
+        #         if 'v' in arxivId:
+        #             arxivId = arxivId.split('v')[0]
+        #         if arxivId not in arxivSet:
+        #             arxivSet.add(arxivId)
+        #             paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
+        #             document = Document(
+        #                 page_content=paper_info.summary,
+        #                 metadata={'title': paper_info.title,
+        #                         'year': paper_info.published.strftime("%Y"),
+        #                         'url':paper_info.entry_id,
+        #                         'type': "internet"},
+        #                 id=idx
+        #             )
+        #             result.append(document)
+        #             idx+=1
         for inst in output:
             if 'arxiv.org' in inst['link'] and 'ar5iv' not in inst['link']:
                 arxivId = inst['link'].split('/')[-1]
@@ -29,17 +48,22 @@ def duckduckgoSearch(query: str, max_results=100):
                     arxivId = arxivId.split('v')[0]
                 if arxivId not in arxivSet:
                     arxivSet.add(arxivId)
-                    paper_info = load_paper_arxiv_api(arxiv_id=arxivId)
-                    document = Document(
-                        page_content=paper_info.summary,
-                        metadata={'title': paper_info.title,
-                                'year': paper_info.published.strftime("%Y"),
-                                'url':paper_info.entry_id,
-                                'type': "internet"},
-                        id=idx
-                    )
-                    result.append(document)
-                    idx+=1
+        paper_infos = search_paper_batch(list(arxivSet))
+        for paper_info in paper_infos:
+            document = Document(
+                page_content=paper_info['abstract'],
+                metadata={
+                    'paperId': paper_info['paperId'],
+                    'title': paper_info['title'],
+                    'year': inst['year'],
+                    'url': inst['url'],
+                    'citationCount': inst['citationCount'],
+                    'type': "internet"
+                },
+                id=idx
+            )
+            result.append(document)
+            idx+=1
         return result
     except:
         return None

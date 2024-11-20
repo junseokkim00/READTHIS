@@ -176,14 +176,15 @@ if check_config():
                 searchOutput = duckduckgoSearch(query=prompt)
                 if searchOutput is None:
                     st.write("web search not working due to api limitation")
+                    searchOutput=[]
                 else:
                     for doc in searchOutput:
                         if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
                             title_set.add(doc.metadata['title'])
                             total_paper_db.append(doc)
                             total_cnt += 1
-                    st.write(
-                        f"You got {total_cnt} papers via browsing the internet.")
+                st.write(
+                    f"You got {total_cnt} papers via browsing the internet.")
         if fetch_from_s2orc:
             with st.status(f"retrieving papers from Semantic Scholar Open Research Corpus(S2ORC)...", expanded=True):
                 total_cnt = 0

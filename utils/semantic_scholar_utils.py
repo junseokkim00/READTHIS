@@ -7,6 +7,29 @@ academic_graph_url = BASE_URL+"/graph/v1"
 recommendation_url = BASE_URL + "/recommendations/v1"
 
 
+def search_paper_batch(id_list):
+    arxiv_id_list = [f"ARXIV:{id}" for id in id_list]
+    load_dotenv(find_dotenv())
+    api_key = os.getenv('SEMANTIC_SCHOLAR_API_KEY')
+    query_batch = academic_graph_url + "/paper/batch"
+    query_params = {'fields': 'title,abstract,authors,year,url,citationStyles'}
+    headers = {'x-api-key': api_key}
+    response = requests.post(
+        query_batch,
+        parms=query_params,
+        headers=headers,
+        json={"ids": arxiv_id_list}
+    )
+    if response.status_code == 200:
+        response_data = response.json()
+    else:
+        print(
+            f"Request failed with status code {response.status_code}: {response.text}")
+        response_data=[]
+    return response_data
+
+
+
 def search_query(query: str):
     load_dotenv(find_dotenv())
     api_key = os.getenv('SEMANTIC_SCHOLAR_API_KEY')

@@ -123,6 +123,7 @@ if arxiv_number and query and check_config():
             searchOutput = duckduckgoSearch(query=query)
             if searchOutput is None:
                 st.write("web search not working due to api limitation")
+                searchOutput=[]
             st.write(
                 f"There is :red[{len(searchOutput)}] papers searched from the internet."
             )
