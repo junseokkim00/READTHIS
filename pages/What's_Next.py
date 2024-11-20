@@ -122,13 +122,13 @@ if paper_info_check() and query and check_config():
                     embeddings=embeddings,
                     save_local=True)
             
-        documents, cnt = get_cited_papers(arxiv_number, use_arxiv_id=use_arxiv_id)
+        documents, cnt = get_cited_papers(arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cnt}] papers highly related to the given paper.")
 
     with st.status(f"retrieving citations...", expanded=True):
         time.sleep(2.05)
-        citations, cite_cnt = get_citations(arxiv_number, use_arxiv_id=use_arxiv_id)
+        citations, cite_cnt = get_citations(arxiv_id=arxiv_number, use_arxiv_id=use_arxiv_id)
         st.write(
             f"There is :red[{cite_cnt}] citation papers in the given paper."
         )
