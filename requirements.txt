@@ -19,3 +19,4 @@ duckduckgo-search
 pydantic
 st-link-analysis
 pysqlite3-binary
+tavily-python
