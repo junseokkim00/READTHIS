@@ -5,9 +5,9 @@ from langchain.embeddings import HuggingFaceBgeEmbeddings
 from uuid import uuid4
 
 # when testing in local file comment it!
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 from langchain_chroma import Chroma
 import chromadb.api
