@@ -18,4 +18,4 @@ streamlit-ext
 duckduckgo-search
 pydantic
 st-link-analysis
-# pysqlite3-binary
+pysqlite3-binary
