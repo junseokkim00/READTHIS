@@ -23,6 +23,13 @@ st.subheader(
 )
 
 
+def check_config():
+    if embed_name == 'openai':
+        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state and 'openai_api_key' in st.session_state)
+    else:
+        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state)
+
+
 with st.sidebar:
     with st.expander("Advanced search settings"):
         use_web_search = st.checkbox("use web search?")
@@ -48,8 +55,13 @@ with st.sidebar:
             st.success("OpenAI_api_key is configured!", icon='✅')
         else:
             st.error("OpenAI_api_key is not configured!", icon='🚨')
-
-    with st.expander("Zotero Configuration"):
+    zotero_title = "Zotero Configuration"
+    if check_config():
+        zotero_title = f"✅ {zotero_title}"
+    else:
+        zotero_title = f"🚨 {zotero_title}"
+    
+    with st.expander(zotero_title):
         library_id = st.text_input("library_id", type="default")
         library_type = st.selectbox(
             "library_type",
@@ -63,6 +75,7 @@ with st.sidebar:
             f"[check out `pyzotero`](https://github.com/urschrei/pyzotero)")
 
         save_configuration = st.button("Save Zotero Configuration")
+
     if save_configuration:
         st.session_state['library_id'] = library_id
         st.session_state['library_type'] = library_type
@@ -75,11 +88,7 @@ with st.sidebar:
         st.error('Zotero configuration is not initialized!', icon="🚨")
 
 
-def check_config():
-    if embed_name == 'openai':
-        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state and 'openai_api_key' in st.session_state)
-    else:
-        return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state)
+
 
 
 # if True:
