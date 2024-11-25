@@ -239,6 +239,7 @@ if paper_info_check() and query and check_config():
             inst = {
                 'title': title,
                 'score': doc[1],
+                'year': doc[0].metadata['year'],
                 'abstract': abstract,
                 'link': doc[0].metadata['url'],
                 'citationCount': doc[0].metadata['citationCount'],
@@ -265,6 +266,8 @@ if paper_info_check() and query and check_config():
 Score {recommendation['score']}
 
 Type {paper_type}
+
+Year {recommendation['year']}
 
 [Link]({recommendation['link']})
 

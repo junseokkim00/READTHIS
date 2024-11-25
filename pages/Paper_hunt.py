@@ -118,6 +118,7 @@ if category and check_config():
                     inst = {
                         'title': title,
                         'score': doc[1],
+                        'year': doc[0].metadata['year'],
                         'identifier': doc[0].metadata['identifier'],
                         'abstract': abstract,
                         'link': doc[0].metadata['url'],
@@ -132,6 +133,8 @@ if category and check_config():
                             st.markdown(f'''# {recommendation['title']}
 
 Score {recommendation['score']}
+
+Year {recommendation['year']}
 
 Identifier: {recommendation['identifier']}
 
@@ -150,6 +153,9 @@ Identifier: {recommendation['identifier']}
                         ),
                         "title": st.column_config.TextColumn(
                             "title", max_chars=100
+                        ),
+                        "year": st.column_config.NumberColumn(
+                            "year",
                         ),
                         "abstract": st.column_config.TextColumn(
                             "abstract", max_chars=100

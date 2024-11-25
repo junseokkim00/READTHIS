@@ -259,6 +259,7 @@ if check_config():
             inst = {
                 'title': title,
                 'score': doc[1],
+                'year': doc[0].metadata['year'],
                 'abstract': abstract,
                 'arxiv_id': arxivId,
                 'link': doc[0].metadata['url'],
@@ -284,6 +285,8 @@ if check_config():
 Score {recommendation['score']}
 
 Type {paper_type}
+
+Year {recommendation['year']}
 
 [Link]({recommendation['link']})
 
