@@ -32,7 +32,7 @@ with st.sidebar:
     embed_name = st.selectbox(
         "select embeddings",
         ("openai", "huggingface"),
-        index=None,
+        index=1,
         placeholder="select embeddings"
     )
     if embed_name == 'openai':

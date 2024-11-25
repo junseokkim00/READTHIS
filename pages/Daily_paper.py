@@ -24,16 +24,17 @@ st.subheader(
 
 
 with st.sidebar:
-    use_web_search = st.checkbox("use web search?")
-    fetch_from_s2orc = st.checkbox("fetch from S2ORC")
-    top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
-    st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
-    embed_name = st.selectbox(
-        "select embeddings",
-        ("openai", "huggingface"),
-        index=None,
-        placeholder="select embeddings"
-    )
+    with st.expander("Advanced search settings"):
+        use_web_search = st.checkbox("use web search?")
+        fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+        st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
+        top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
+        embed_name = st.selectbox(
+            "select embeddings",
+            ("openai", "huggingface"),
+            index=1,
+            placeholder="select embeddings"
+        )
     if embed_name == 'openai':
         with st.expander("Openai api key setting"):
             openai_api_key = st.text_input("OpenAI api key", type="password")
