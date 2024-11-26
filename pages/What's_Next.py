@@ -390,13 +390,13 @@ Citation count: {recommendation['citationCount']}
         copy_code = '\n'.join(copy_code)
         st.code(copy_code, language='markdown')
         shutil.rmtree(f'./db/{arxiv_number}')
-elif check_config():
-    st.error(
-        "Please enter your current paper's arxiv number and your query.", icon='🚨')
-elif embed_name == 'openai':
-    st.error('Please setup your **OpenAI configuration**(left sidebar) first if you want to use this service!', icon='🚨')
 else:
-    with st.container(border=True):
+    if check_config():
+        st.error(
+            "Please enter your current paper's arxiv number and your query.", icon='🚨')
+    elif embed_name == 'openai':
+        st.error('Please setup your **OpenAI configuration**(left sidebar) first if you want to use this service!', icon='🚨')
+    with st.expander("How to use **What's Next?**", expanded=False):
         st.markdown("""## How to use What's Next?
 #### 1. check for advanced search
 + `use web search`: also retrieve relevant paper from duckduckgo search (:red[limited by api rate limit])

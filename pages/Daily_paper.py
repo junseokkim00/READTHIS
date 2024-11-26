@@ -391,13 +391,13 @@ arxiv id: {recommendation['arxiv_id']}
 # libraryCatalog: 'arXiv.org'
 # extra: archiveID [category]
 # collections: key"""
-
-elif embed_name == 'huggingface':
-    st.error('Please setup your **zotero configuration**(left sidebar) first if you want to use this service!', icon='🚨')
-elif embed_name == 'openai':
-    st.error('Please setup your **zotero configuration** and **openai_api_key** (left sidebar) first if you want to use this service!', icon='🚨')
 else:
-    with st.container(border=True):
+    if embed_name == 'huggingface':
+        st.error('Please setup your **zotero configuration**(left sidebar) first if you want to use this service!', icon='🚨')
+    elif embed_name == 'openai':
+        st.error('Please setup your **zotero configuration** and **openai_api_key** (left sidebar) first if you want to use this service!', icon='🚨')
+
+    with st.expander("How to use **Daily paper?**", expanded=False):
         st.markdown("""## How to use Daily paper?
 #### 1. check for advanced search
 + `use web search`: also retrieve relevant paper from duckduckgo search (:red[limited by api rate limit])

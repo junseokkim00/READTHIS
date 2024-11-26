@@ -195,7 +195,7 @@ Identifier: {recommendation['identifier']}
                 )
             shutil.rmtree(f'./db/{db_name}')
 else:
-    with st.container(border=True):
+    with st.expander("How to use **Paper Hunt?**", expanded=False):
         st.markdown("""## How to use Paper Hunt?
 #### 1. Select embeddings
 + `openai`: Fast but require api_key
