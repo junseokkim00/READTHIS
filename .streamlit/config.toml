@@ -29,12 +29,28 @@
 # textColor="#281731"
 # font="serif"
 
+# [theme]
+# primaryColor="#282929"
+# backgroundColor="#d6d6d7"
+# secondaryBackgroundColor="#ffffff"
+# textColor="#051a07"
+# font="serif"
+
+#dark
+# [theme]
+# primaryColor="#fcfdfd"
+# backgroundColor="#020203"
+# secondaryBackgroundColor="#000100"
+# textColor="#dfeef3"
+
+#light
 [theme]
 primaryColor="#282929"
 backgroundColor="#d6d6d7"
 secondaryBackgroundColor="#ffffff"
 textColor="#051a07"
 font="serif"
+
 
 # [theme]
 # primaryColor="#0d0c08"
