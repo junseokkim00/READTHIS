@@ -22,8 +22,37 @@ st.title("What's :red[Next]? 📄")
 st.subheader(
     "find the next paper to read based on their `abstract`", divider=True)
 
+themeColor = {
+    "light": {
+        "primaryColor": "#282929",
+        "backgroundColor": "#d6d6d7",
+        "secondaryBackgroundColor": "#ffffff",
+        "textColor": "#051a07"
+    },
+    "dark": {
+        "primaryColor": "#fcfdfd",
+        "backgroundColor": "#020203",
+        "secondaryBackgroundColor": "#000100",
+        "textColor": "#dfeef3"
+    }
+}
+keys = ["primaryColor",
+        "backgroundColor",
+        "secondaryBackgroundColor",
+        "textColor"]
+
 
 with st.sidebar:
+    theme_switcher = st.toggle("light mode 💡")
+    theme = "light" if theme_switcher else "dark"
+    has_changed = False
+    for key in keys:
+        if st._config.get_option(f'theme.{key}') != themeColor[theme][key]:
+            st._config.set_option(f"theme.{key}",
+                                  themeColor[theme][key])
+            has_changed = True
+    if has_changed:
+        st.rerun()
     # judge_llm = st.checkbox("Use llm to judge paper", disabled=True)
     # rewrite_query = st.checkbox("rewrite query?", disabled=True)
     use_arxiv_id = st.radio("choose paper submit type",

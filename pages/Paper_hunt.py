@@ -21,8 +21,36 @@ st.title("Paper :red[Hunt] 🕵️‍♂️")
 st.subheader(
     "find the latest paper to read from daily :orange[rss feed]", divider=True)
 
+themeColor = {
+    "light": {
+        "primaryColor": "#282929",
+        "backgroundColor": "#d6d6d7",
+        "secondaryBackgroundColor": "#ffffff",
+        "textColor": "#051a07"
+    },
+    "dark": {
+        "primaryColor": "#fcfdfd",
+        "backgroundColor": "#020203",
+        "secondaryBackgroundColor": "#000100",
+        "textColor": "#dfeef3"
+    }
+}
+keys = ["primaryColor",
+        "backgroundColor",
+        "secondaryBackgroundColor",
+        "textColor"]
 
 with st.sidebar:
+    theme_switcher = st.toggle("light mode 💡")
+    theme = "light" if theme_switcher else "dark"
+    has_changed = False
+    for key in keys:
+        if st._config.get_option(f'theme.{key}') != themeColor[theme][key]:
+            st._config.set_option(f"theme.{key}",
+                                  themeColor[theme][key])
+            has_changed = True
+    if has_changed:
+        st.rerun()
     # category = st.selectbox(
     #     "select category for new arxiv papers",
     #     (key for key in category_map),

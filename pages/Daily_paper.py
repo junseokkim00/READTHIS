@@ -30,12 +30,43 @@ def check_config():
         return ('library_id' in st.session_state and 'library_type' in st.session_state and 'zotero_api_key' in st.session_state)
 
 
+themeColor = {
+    "light": {
+        "primaryColor": "#282929",
+        "backgroundColor": "#d6d6d7",
+        "secondaryBackgroundColor": "#ffffff",
+        "textColor": "#051a07"
+    },
+    "dark": {
+        "primaryColor": "#fcfdfd",
+        "backgroundColor": "#020203",
+        "secondaryBackgroundColor": "#000100",
+        "textColor": "#dfeef3"
+    }
+}
+keys = ["primaryColor",
+        "backgroundColor",
+        "secondaryBackgroundColor",
+        "textColor"]
+
 with st.sidebar:
+    theme_switcher = st.toggle("light mode 💡")
+    theme = "light" if theme_switcher else "dark"
+    has_changed = False
+    for key in keys:
+        if st._config.get_option(f'theme.{key}') != themeColor[theme][key]:
+            st._config.set_option(f"theme.{key}",
+                                  themeColor[theme][key])
+            has_changed = True
+    if has_changed:
+        st.rerun()
+
     with st.expander("Advanced search settings"):
         use_web_search = st.checkbox("use web search?")
         fetch_from_s2orc = st.checkbox("fetch from S2ORC")
         st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
-        top_k = st.number_input("top k", value=10, min_value=1, max_value=100, step=1)
+        top_k = st.number_input(
+            "top k", value=10, min_value=1, max_value=100, step=1)
         embed_name = st.selectbox(
             "select embeddings",
             ("openai", "huggingface"),
@@ -60,7 +91,7 @@ with st.sidebar:
         zotero_title = f"✅ {zotero_title}"
     else:
         zotero_title = f"🚨 {zotero_title}"
-    
+
     with st.expander(zotero_title):
         library_id = st.text_input("library_id", type="default")
         library_type = st.selectbox(
@@ -86,9 +117,6 @@ with st.sidebar:
         st.success('Zotero configuration saved!', icon="✅")
     else:
         st.error('Zotero configuration is not initialized!', icon="🚨")
-
-
-
 
 
 # if True:
@@ -188,7 +216,7 @@ if check_config():
                 searchOutput = tavilySearch(query=prompt)
                 if searchOutput is None:
                     st.write("web search not working due to api limitation")
-                    searchOutput=[]
+                    searchOutput = []
                 else:
                     for doc in searchOutput:
                         if doc.metadata['title'] not in title_set and doc.metadata['title'] not in titles:
@@ -204,7 +232,8 @@ if check_config():
                     st.write(f"fetching relevant papers of `{title}`...")
                     time.sleep(2.05)
                     # citations, cite_cnt = get_citations(arxiv_id=arxivId)
-                    recommendations, recommendation_cnt = recommend_paper(paper_title=title)
+                    recommendations, recommendation_cnt = recommend_paper(
+                        paper_title=title)
                     for recommendation in recommendations:
                         # paper_relationship[recommendation.metadata['title']].append(
                         #     title)
@@ -214,8 +243,10 @@ if check_config():
                             total_cnt += 1
                         else:
                             recommendation_cnt -= 1
-                    st.write(f":red[{recommendation_cnt}] paper is added to the db.")
-                st.write(f"total number of relevant paper from S2ORC: {total_cnt}")
+                    st.write(
+                        f":red[{recommendation_cnt}] paper is added to the db.")
+                st.write(
+                    f"total number of relevant paper from S2ORC: {total_cnt}")
 
         st.write(
             f"You have :red[{len(total_paper_db)}] papers in your recommendation DB.")
