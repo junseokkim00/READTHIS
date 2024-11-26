@@ -31,7 +31,7 @@ themeColor = {
     "dark": {
         "primaryColor": "#fcfdfd",
         "backgroundColor": "#020203",
-        "secondaryBackgroundColor": "#000100",
+        "secondaryBackgroundColor": "#171a17",
         "textColor": "#dfeef3"
     }
 }
@@ -41,8 +41,8 @@ keys = ["primaryColor",
         "textColor"]
 
 with st.sidebar:
-    theme_switcher = st.toggle("light mode 💡")
-    theme = "light" if theme_switcher else "dark"
+    theme_switcher = st.toggle("dark mode 🌙")
+    theme = "dark" if theme_switcher else "light"
     has_changed = False
     for key in keys:
         if st._config.get_option(f'theme.{key}') != themeColor[theme][key]:
