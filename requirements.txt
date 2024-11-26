@@ -20,3 +20,4 @@ pydantic
 st-link-analysis
 pysqlite3-binary
 tavily-python
+streamlit-extras

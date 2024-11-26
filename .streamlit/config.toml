@@ -14,11 +14,26 @@
 # textColor="#020100"
 # font="serif"
 
+# [theme]
+# primaryColor="#dad4d1"
+# backgroundColor="#2e2725"
+# secondaryBackgroundColor="#090808"
+# textColor="#d3cae8"
+# font="serif"
+
+#newone
+# [theme]
+# primaryColor="#22204c"
+# backgroundColor="#b4b3df"
+# secondaryBackgroundColor="#d5e3f9"
+# textColor="#281731"
+# font="serif"
+
 [theme]
-primaryColor="#dad4d1"
-backgroundColor="#2e2725"
-secondaryBackgroundColor="#090808"
-textColor="#d3cae8"
+primaryColor="#282929"
+backgroundColor="#d6d6d7"
+secondaryBackgroundColor="#ffffff"
+textColor="#051a07"
 font="serif"
 
 # [theme]
