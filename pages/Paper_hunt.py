@@ -97,6 +97,7 @@ category = st.selectbox(
 )
 
 if category and check_config():
+    st.empty()
     with st.status(f"Fetching the latest rss feed", expanded=True):
         feed_list = load_paper_from_rss(category=category)
         st.write(

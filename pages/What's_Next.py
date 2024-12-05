@@ -66,8 +66,8 @@ with st.sidebar:
     else:
         use_arxiv_id = False
     with st.expander("Advanced search settings"):
-        use_web_search = st.checkbox("use web search?")
-        fetch_from_s2orc = st.checkbox("fetch from S2ORC")
+        use_web_search = st.checkbox("use web search?", value=True)
+        fetch_from_s2orc = st.checkbox("fetch from S2ORC", value=True)
         st.write("[What is S2ORC?](https://github.com/allenai/s2orc)")
         top_k = st.number_input(
             "top k", value=10, min_value=1, max_value=100, step=1)
@@ -133,6 +133,7 @@ def paper_info_check():
 
 
 if paper_info_check() and query and check_config():
+    st.empty()
     with st.chat_message('user'):
         st.write(query)
     if use_arxiv_id:
