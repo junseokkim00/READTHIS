@@ -161,6 +161,7 @@ if check_config():
                         'score': doc[1],
                         'year': year,
                         'abstract': abstract,
+                        'url': doc[0].metadata['url'],
                         'type': f"{year} {conference} {paper_type}"
                     }
                     response.append(inst)
@@ -174,6 +175,8 @@ if check_config():
 Score {recommendation['score']}
 
 Year {recommendation['year']}
+
+[Link]({recommendation['url']})
 
 ## Abstract
 {recommendation['abstract']}''')
