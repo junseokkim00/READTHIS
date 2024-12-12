@@ -159,7 +159,7 @@ if check_config():
                     inst = {
                         'title': title,
                         'score': doc[1],
-                        'year': doc[0].metadata['year'],
+                        'year': year,
                         'abstract': abstract,
                         'type': f"{year} {conference} {paper_type}"
                     }
@@ -182,11 +182,6 @@ Year {recommendation['year']}
                 st.data_editor(
                     df,
                     column_config={
-                        "link": st.column_config.LinkColumn(
-                            "URL",
-                            max_chars=100,
-                            display_text="Open Link"
-                        ),
                         "title": st.column_config.TextColumn(
                             "title", max_chars=100
                         ),
