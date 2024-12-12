@@ -207,10 +207,12 @@ def nlp_fetcher(event: str, year: str, paper_type: str) -> List:
     abstracts = papers.find_all(class_="card")
     title_num = []
     title_dict = {}
+    
     abstract_num = []
     abstract_dict = {}
     for title in titles:
         title_num.append(int(title.attrs['href'].split('.')[-1][:-1]))
+        title_num.append(title.attrs['href'])
         title_dict[int(title.attrs['href'].split('.')
                        [-1][:-1])] = title.get_text()
     for abstract in abstracts:
@@ -223,7 +225,10 @@ def nlp_fetcher(event: str, year: str, paper_type: str) -> List:
         # output.append((title_dict[num], abstract_dict[num]))
         document = Document(
             page_content=abstract_dict[num],
-            metadata={'title': title_dict[num]},
+            metadata={'title': title_dict[num],
+                      'year': year,
+                      'paper_type': paper_type
+                      },
             id=idx
         )
         output.append(document)
