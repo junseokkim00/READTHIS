@@ -226,7 +226,6 @@ def nlp_fetcher(event: str, year: str, paper_type: str) -> List:
         document = Document(
             page_content=abstract_dict[num],
             metadata={'title': title_dict[num],
-                      'year': year,
                       'paper_type': paper_type
                       },
             id=idx
